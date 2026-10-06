@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>South Med Pump House – 4D Construction Dashboard</title>
+<style>
+:root{--bg:#E9EDF1;--panel:#FFFFFF;--panel2:#F3F6F9;--ink:#10263A;--muted:#5A6B7A;--line:#D3DAE2;--accent:#E8A33D;--teal:#1F6672;--btn:#E1E8EF;--btnh:#D0DAE4;--scene:#DDE5EC;--bar:#1F6672;--bar2:#E8A33D}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0A141D;--panel:#112232;--panel2:#0E1C2A;--ink:#E8EEF3;--muted:#9AABB9;--line:#223A4F;--teal:#6FC1CE;--btn:#1B3247;--btnh:#27455F;--scene:#0C1822;--bar:#6FC1CE}}
+:root[data-theme="dark"]{--bg:#0A141D;--panel:#112232;--panel2:#0E1C2A;--ink:#E8EEF3;--muted:#9AABB9;--line:#223A4F;--teal:#6FC1CE;--btn:#1B3247;--btnh:#27455F;--scene:#0C1822;--bar:#6FC1CE}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+button,select,input{font:inherit;color:inherit}
+#app{display:grid;grid-template-rows:auto 1fr;height:100%;min-height:0}
+#top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+#top h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.2px}
+#top h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+.tc{display:flex;align-items:center;gap:8px;flex:1;min-width:300px}
+.btn{background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;line-height:1.2}
+.btn:hover{background:var(--btnh)}
+.btn.on{background:var(--accent);color:#1b1305;border-color:var(--accent);font-weight:600}
+select{background:var(--btn);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+#day{flex:1;min-width:140px;accent-color:var(--accent)}
+.badge{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:600;white-space:nowrap}
+#main{display:grid;grid-template-columns:350px 1fr;min-height:0}
+#side{overflow:auto;padding:12px;background:var(--panel2);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+#center{display:grid;grid-template-rows:1fr 250px;min-height:0;min-width:0}
+#view{position:relative;min-height:0;background:var(--scene);overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+#tools{position:absolute;left:10px;top:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 300px)}
+#sect{position:absolute;right:10px;top:10px;background:color-mix(in srgb,var(--panel) 92%,transparent);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:240px;font-size:12px}
+#sect summary{cursor:pointer;font-weight:600;font-size:13px}
+#sect label{display:grid;grid-template-columns:auto 38px 1fr auto;align-items:center;gap:6px;margin-top:6px}
+#sect input[type=range]{flex:1;accent-color:var(--accent)}
+#hint{position:absolute;left:10px;bottom:8px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 80%,transparent);padding:3px 8px;border-radius:6px;pointer-events:none}
+#msg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:15px;color:var(--ink)}
+#bottom{display:grid;grid-template-columns:2fr 1fr;gap:1px;background:var(--line);border-top:1px solid var(--line);min-height:0}
+.cv{background:var(--panel);position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.cv h3{margin:0;padding:6px 10px 0;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.cv canvas{flex:1;width:100%;min-height:0;display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.card h2{margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kpi b{display:block;font-size:20px;line-height:1.1;font-weight:700}
+.kpi span{font-size:12px;color:var(--muted)}
+.bar{height:8px;background:var(--btn);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--bar);border-radius:6px}
+.row{display:grid;grid-template-columns:1fr 44px;gap:2px 8px;align-items:center;margin:6px 0;font-size:12.5px}
+.row .bar{grid-column:1/3}
+.act{font-size:12.5px;margin:6px 0}
+.act .t{display:flex;justify-content:space-between;gap:8px}
+.act .t span:last-child{color:var(--muted);white-space:nowrap}
+.act .bar{height:6px;margin-top:3px}
+.act .bar i{background:var(--accent)}
+.lg{display:flex;justify-content:space-between;align-items:center;margin:10px 0 2px;font-weight:700;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.lg button,.lr button{background:var(--btn);border:1px solid var(--line);border-radius:6px;padding:0 6px;cursor:pointer;line-height:1.5;font-size:11px}
+.lr{display:grid;grid-template-columns:auto 1fr auto auto auto;gap:6px;align-items:center;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--line)}
+.lr .ld{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.lr input{accent-color:var(--accent)}
+.lay label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.lay h4{grid-column:1/3;margin:8px 0 2px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.lay input{accent-color:var(--accent)}
+.sel{font-size:12.5px}
+.sel b{font-size:14px}
+.sel table{width:100%;border-collapse:collapse;margin-top:6px}
+.sel td{padding:2px 0;border-top:1px solid var(--line);vertical-align:top}
+.sel td:first-child{color:var(--muted);width:42%}
+.leg{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;font-size:12.5px;align-items:center}
+.sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25)}
+.note{font-size:12px;color:var(--muted)}
+@media (max-width:900px){
+ html,body{height:auto}
+ #app{height:auto;display:block}
+ #main{display:flex;flex-direction:column}
+ #center{display:flex;flex-direction:column;order:1}
+ #side{order:2;border-right:0;border-top:1px solid var(--line)}
+ #view{height:62vh;min-height:360px}
+ #bottom{grid-template-columns:1fr;height:420px}
+ #sect{width:190px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+ <header id="top">
+  <h1>Pump House – 4D Dashboard<small>3D model linked to the building schedule · ordinal months</small></h1>
+  <div class="tc">
+   <button class="btn" id="play" aria-label="Play or pause">▶ Play</button>
+   <button class="btn" id="prev" title="Back one day" aria-label="Back one day">◀ 1 d</button><button class="btn" id="next" title="Forward one day" aria-label="Forward one day">1 d ▶</button><select id="speed" aria-label="Playback speed (days per second)"><option value="0.25">0.25 d/s</option><option value="0.5">0.5 d/s</option><option value="1">1 d/s</option><option value="2" selected>2 d/s</option><option value="5">5 d/s</option><option value="10">10 d/s</option><option value="30">30 d/s</option></select>
+   <select id="msel" aria-label="Month"></select>
+   <input type="range" id="day" min="0" max="100" step="0.1" aria-label="Day">
+   <span class="badge" id="tbadge">–</span>
+  </div>
+  <button class="btn" id="theme" aria-label="Toggle theme">Theme</button>
+ </header>
+ <div id="main">
+  <aside id="side">
+   <section class="card"><h2>Status</h2><div class="kpis" id="kpis"></div></section>
+   <section class="card"><h2>Elements, in construction order</h2><div class="note" style="margin-bottom:4px">Tick to show or hide; ◎ shows only that group; ⏱ jumps the timeline to its start.</div><div id="layers"></div></section>
+   <section class="card"><h2>Progress by phase</h2><div id="phases"></div></section>
+   <section class="card"><h2>Active now</h2><div id="active"></div></section>
+   <section class="card"><h2>Site equipment working now</h2><div id="mnow"></div></section>
+   <section class="card"><h2>Selected element</h2><div class="sel" id="sel"><span class="note">Click any element in the 3D view.</span></div></section>
+      <section class="card"><h2>Legend</h2><div class="leg" id="legend"></div></section>
+   <p class="note">Schematic model built from drawings 31, 36, 38, 05, 34, 51 and the BOQ. Footprint and perimeter are scaled (±15%); frame quantities and the T-fins are placeholders. Check against the DWG before baselining.</p>
+  </aside>
+  <div id="center">
+   <div id="view">
+    <canvas id="gl"></canvas>
+    <div id="tools"></div>
+    <details id="sect"><summary>Section cuts</summary>
+     <label><input type="checkbox" id="cz"><span>N–S</span><input type="range" id="cz_v" min="-40" max="40" step="0.5" value="0"><input type="checkbox" id="cz_f" title="Flip side"></label>
+     <label><input type="checkbox" id="cx"><span>E–W</span><input type="range" id="cx_v" min="-5" max="80" step="0.5" value="8"><input type="checkbox" id="cx_f" title="Flip side"></label>
+     <label><input type="checkbox" id="cy"><span>Level</span><input type="range" id="cy_v" min="-30" max="20" step="0.1" value="4"><input type="checkbox" id="cy_f" title="Flip side"></label>
+     <div class="note" style="margin-top:6px">Tick the box to cut; the small box flips the side.</div>
+    </details>
+    <div id="hint">Drag = rotate · right-drag / Shift-drag = pan · wheel = zoom · click = select</div>
+    <div id="msg"></div>
+   </div>
+   <div id="bottom">
+    <div class="cv"><h3>Schedule by WBS (click or drag to set the date)</h3><canvas id="gantt"></canvas></div>
+    <div class="cv"><h3>Direct manpower by month</h3><canvas id="hist"></canvas></div>
+   </div>
+  </div>
+ </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const D = {"acts": [{"id": "S110", "wbs": "1.1.1", "name": "Mobilise D-wall rig, bentonite and desanding plant, cage yard", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 21, "s": 1, "f": 21, "ms": "M01", "mf": "M01", "men": 14, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S120", "wbs": "1.1.1", "name": "Working platform, utilities, survey control", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 10, "s": 1, "f": 10, "ms": "M01", "mf": "M01", "men": 20, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S130", "wbs": "1.1.1", "name": "Guide walls", "qty": 267.57, "unit": "m", "prod": 25, "crews": 2, "dur": 6, "s": 11, "f": 16, "ms": "M01", "mf": "M01", "men": 20, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S210", "wbs": "1.1.2", "name": "D-wall panels incl. T-fin panels (PLACEHOLDER)", "qty": 132, "unit": "panel", "prod": 0.86, "crews": 1, "dur": 154, "s": 22, "f": 175, "ms": "M01", "mf": "M06", "men": 42, "conc": 10668.1, "rebar": 1173.5, "form": 0, "exc": 0}, {"id": "S220", "wbs": "1.1.2", "name": "Capping (crown) beam", "qty": 267.57, "unit": "m", "prod": 30, "crews": 2, "dur": 5, "s": 174, "f": 178, "ms": "M06", "mf": "M06", "men": 20, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S230", "wbs": "1.1.2", "name": "D-wall verification (curing, integrity, joint leakage)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 7, "s": 179, "f": 185, "ms": "M06", "mf": "M07", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S310", "wbs": "1.1.3", "name": "Dewatering wells \u2013 drilling and installation (outside the wall)", "qty": 14, "unit": "well", "prod": 1, "crews": 2, "dur": 7, "s": 176, "f": 182, "ms": "M06", "mf": "M06", "men": 16, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S320", "wbs": "1.1.3", "name": "Pumps, headers, power, discharge line", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 7, "s": 180, "f": 186, "ms": "M06", "mf": "M07", "men": 8, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S330", "wbs": "1.1.3", "name": "Dewatering commissioning and initial drawdown", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 17, "s": 187, "f": 203, "ms": "M07", "mf": "M07", "men": 4, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S340", "wbs": "1.1.3", "name": "Continuous dewatering until flooding (LOE)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 407, "s": 187, "f": 593, "ms": "M07", "mf": "M20", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S410", "wbs": "1.1.4", "name": "Excavation \u2013 bench 1", "qty": 19775, "unit": "m3", "prod": 1209.6, "crews": 1, "dur": 17, "s": 187, "f": 203, "ms": "M07", "mf": "M07", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 19775}, {"id": "S420", "wbs": "1.1.4", "name": "Excavation \u2013 bench 2", "qty": 19775, "unit": "m3", "prod": 1209.6, "crews": 1, "dur": 17, "s": 204, "f": 220, "ms": "M07", "mf": "M08", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 19775}, {"id": "S430", "wbs": "1.1.4", "name": "Excavation \u2013 bench 3 to formation", "qty": 18588.5, "unit": "m3", "prod": 1209.6, "crews": 1, "dur": 16, "s": 221, "f": 236, "ms": "M08", "mf": "M08", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 18588.5}, {"id": "S440", "wbs": "1.1.4", "name": "Formation trimming, sump pits, survey", "qty": 3955, "unit": "m2", "prod": 1500, "crews": 2, "dur": 2, "s": 237, "f": 238, "ms": "M08", "mf": "M08", "men": 20, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S510", "wbs": "1.1.5", "name": "Replacement fill below plain concrete", "qty": 3955, "unit": "m3", "prod": 700, "crews": 1, "dur": 6, "s": 239, "f": 244, "ms": "M08", "mf": "M08", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "S520", "wbs": "1.1.5", "name": "Compaction tests and formation approval", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 2, "s": 245, "f": 246, "ms": "M09", "mf": "M09", "men": 4, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B110", "wbs": "1.2.1.1", "name": "Plain concrete 300 mm", "qty": 1110, "unit": "m3", "prod": 600, "crews": 1, "dur": 2, "s": 247, "f": 248, "ms": "M09", "mf": "M09", "men": 16, "conc": 1110, "rebar": 0, "form": 0, "exc": 0}, {"id": "B120", "wbs": "1.2.1.1", "name": "Waterproofing / protection screed under raft", "qty": 3700, "unit": "m2", "prod": 500, "crews": 2, "dur": 4, "s": 250, "f": 253, "ms": "M09", "mf": "M09", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B130", "wbs": "1.2.1.1", "name": "Survey set-out and inspection for raft", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 252, "f": 254, "ms": "M09", "mf": "M09", "men": 4, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B210", "wbs": "1.2.1.2", "name": "Raft reinforcement", "qty": 600, "unit": "t", "prod": 10, "crews": 4, "dur": 15, "s": 254, "f": 268, "ms": "M09", "mf": "M09", "men": 56, "conc": 0, "rebar": 600, "form": 0, "exc": 0}, {"id": "B220", "wbs": "1.2.1.2", "name": "Raft edge forms, stop ends, waterstops, embeds", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 8, "s": 256, "f": 263, "ms": "M09", "mf": "M09", "men": 36, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B230", "wbs": "1.2.1.2", "name": "Raft concrete pours", "qty": 5, "unit": "pour", "prod": 0.5, "crews": 1, "dur": 13, "s": 257, "f": 269, "ms": "M09", "mf": "M09", "men": 16, "conc": 4440, "rebar": 0, "form": 0, "exc": 0}, {"id": "B240", "wbs": "1.2.1.2", "name": "Raft curing before wall loading", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 7, "s": 270, "f": 276, "ms": "M09", "mf": "M10", "men": 4, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B300", "wbs": "1.2.1.3", "name": "Wall pieces for intake pipes and gate openings (zone B)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 8, "s": 271, "f": 278, "ms": "M09", "mf": "M10", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA1R", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 pump-bay block (fins) \u2013 lift 1 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 273, "f": 280, "ms": "M09", "mf": "M10", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WA1F", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 1 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 277, "f": 283, "ms": "M10", "mf": "M10", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WA1P", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 1 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 285, "f": 286, "ms": "M10", "mf": "M10", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA1C", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 1 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 287, "f": 289, "ms": "M10", "mf": "M10", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB1R", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 wing walls, screen channels, gate chamber \u2013 lift 1 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 281, "f": 288, "ms": "M10", "mf": "M10", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WB1F", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 1 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 285, "f": 291, "ms": "M10", "mf": "M10", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WB1P", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 1 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 293, "f": 294, "ms": "M10", "mf": "M10", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB1C", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 1 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 295, "f": 297, "ms": "M10", "mf": "M10", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA2R", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 pump-bay block (fins) \u2013 lift 2 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 289, "f": 296, "ms": "M10", "mf": "M10", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WA2F", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 2 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 293, "f": 299, "ms": "M10", "mf": "M10", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WA2P", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 2 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 301, "f": 302, "ms": "M10", "mf": "M10", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA2C", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 2 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 303, "f": 305, "ms": "M10", "mf": "M11", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB2R", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 wing walls, screen channels, gate chamber \u2013 lift 2 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 297, "f": 304, "ms": "M10", "mf": "M10", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WB2F", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 2 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 301, "f": 307, "ms": "M10", "mf": "M11", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WB2P", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 2 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 309, "f": 310, "ms": "M11", "mf": "M11", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB2C", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 2 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 311, "f": 313, "ms": "M11", "mf": "M11", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA3R", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 pump-bay block (fins) \u2013 lift 3 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 305, "f": 312, "ms": "M11", "mf": "M11", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WA3F", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 3 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 309, "f": 315, "ms": "M11", "mf": "M11", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WA3P", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 3 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 317, "f": 318, "ms": "M11", "mf": "M11", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WA3C", "wbs": "1.2.1.3", "name": "Walls zone A \u2013 lift 3 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 319, "f": 321, "ms": "M11", "mf": "M11", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB3R", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 wing walls, screen channels, gate chamber \u2013 lift 3 reinforcement and embeds", "qty": 183.21, "unit": "t", "prod": 8, "crews": 3, "dur": 8, "s": 313, "f": 320, "ms": "M11", "mf": "M11", "men": 42, "conc": 0, "rebar": 183.2, "form": 0, "exc": 0}, {"id": "WB3F", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 3 gang forms (erect, close, strip)", "qty": 2982.7, "unit": "m2", "prod": 150, "crews": 3, "dur": 7, "s": 317, "f": 323, "ms": "M11", "mf": "M11", "men": 36, "conc": 0, "rebar": 0, "form": 2982.7, "exc": 0}, {"id": "WB3P", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 3 concrete pour (2 shifts)", "qty": 1355.78, "unit": "m3", "prod": 540, "crews": 1, "dur": 2, "s": 325, "f": 326, "ms": "M11", "mf": "M11", "men": 16, "conc": 1355.8, "rebar": 0, "form": 0, "exc": 0}, {"id": "WB3C", "wbs": "1.2.1.3", "name": "Walls zone B \u2013 lift 3 curing and strip", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 327, "f": 329, "ms": "M11", "mf": "M11", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B410", "wbs": "1.2.1.4", "name": "Top slab \u2013 heavy falsework (about 12 m)", "qty": 3515, "unit": "m2", "prod": 90, "crews": 3, "dur": 14, "s": 327, "f": 340, "ms": "M11", "mf": "M12", "men": 36, "conc": 0, "rebar": 0, "form": 3515, "exc": 0}, {"id": "B420", "wbs": "1.2.1.4", "name": "Top slab \u2013 reinforcement", "qty": 327.75, "unit": "t", "prod": 8, "crews": 3, "dur": 14, "s": 334, "f": 347, "ms": "M11", "mf": "M12", "men": 42, "conc": 0, "rebar": 327.8, "form": 0, "exc": 0}, {"id": "B430", "wbs": "1.2.1.4", "name": "Top slab \u2013 concrete pour (2 shifts)", "qty": 2425.35, "unit": "m3", "prod": 540, "crews": 1, "dur": 3, "s": 349, "f": 351, "ms": "M12", "mf": "M12", "men": 16, "conc": 2425.3, "rebar": 0, "form": 0, "exc": 0}, {"id": "B510", "wbs": "1.2.1.5", "name": "Slab gains 80% strength (hold for structural backfill)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 14, "s": 352, "f": 365, "ms": "M12", "mf": "M12", "men": 3, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "B520", "wbs": "1.2.1.5", "name": "Structural backfill around structure (narrow gap)", "qty": 4977.6, "unit": "m3", "prod": 450, "crews": 2, "dur": 6, "s": 366, "f": 371, "ms": "M13", "mf": "M13", "men": 20, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "P110", "wbs": "1.2.2", "name": "Stage 1 \u2013 columns to +10.9, floors and beams +6.7 to +10.9 \u2013 formwork and shoring", "qty": 6125, "unit": "m2", "prod": 60, "crews": 4, "dur": 26, "s": 358, "f": 383, "ms": "M12", "mf": "M13", "men": 48, "conc": 0, "rebar": 0, "form": 6125, "exc": 0}, {"id": "P120", "wbs": "1.2.2", "name": "Stage 1 \u2013 columns to +10.9, floors and beams +6.7 to +10.9 \u2013 reinforcement", "qty": 165.54, "unit": "t", "prod": 6, "crews": 3, "dur": 10, "s": 367, "f": 376, "ms": "M13", "mf": "M13", "men": 42, "conc": 0, "rebar": 165.5, "form": 0, "exc": 0}, {"id": "P130", "wbs": "1.2.2", "name": "Stage 1 \u2013 columns to +10.9, floors and beams +6.7 to +10.9 \u2013 concrete pour and curing", "qty": 1225, "unit": "m3", "prod": 540, "crews": 1, "dur": 6, "s": 385, "f": 390, "ms": "M13", "mf": "M13", "men": 16, "conc": 1225, "rebar": 0, "form": 0, "exc": 0}, {"id": "P210", "wbs": "1.2.2", "name": "Stage 2 \u2013 columns to +13.43, crane runway beams CA 500x800 \u2013 formwork and shoring", "qty": 4375, "unit": "m2", "prod": 60, "crews": 4, "dur": 19, "s": 397, "f": 415, "ms": "M14", "mf": "M14", "men": 48, "conc": 0, "rebar": 0, "form": 4375, "exc": 0}, {"id": "P220", "wbs": "1.2.2", "name": "Stage 2 \u2013 columns to +13.43, crane runway beams CA 500x800 \u2013 reinforcement", "qty": 118.24, "unit": "t", "prod": 6, "crews": 3, "dur": 7, "s": 404, "f": 410, "ms": "M14", "mf": "M14", "men": 42, "conc": 0, "rebar": 118.2, "form": 0, "exc": 0}, {"id": "P230", "wbs": "1.2.2", "name": "Stage 2 \u2013 columns to +13.43, crane runway beams CA 500x800 \u2013 concrete pour and curing", "qty": 875, "unit": "m3", "prod": 540, "crews": 1, "dur": 5, "s": 417, "f": 421, "ms": "M14", "mf": "M14", "men": 16, "conc": 875, "rebar": 0, "form": 0, "exc": 0}, {"id": "P310", "wbs": "1.2.2", "name": "Stage 3 \u2013 columns to +17.3, roof beams, roof slab, parapet to +18.6 \u2013 formwork and shoring", "qty": 7000, "unit": "m2", "prod": 60, "crews": 4, "dur": 30, "s": 428, "f": 457, "ms": "M15", "mf": "M16", "men": 48, "conc": 0, "rebar": 0, "form": 7000, "exc": 0}, {"id": "P320", "wbs": "1.2.2", "name": "Stage 3 \u2013 columns to +17.3, roof beams, roof slab, parapet to +18.6 \u2013 reinforcement", "qty": 189.19, "unit": "t", "prod": 6, "crews": 3, "dur": 11, "s": 438, "f": 448, "ms": "M15", "mf": "M15", "men": 42, "conc": 0, "rebar": 189.2, "form": 0, "exc": 0}, {"id": "P330", "wbs": "1.2.2", "name": "Stage 3 \u2013 columns to +17.3, roof beams, roof slab, parapet to +18.6 \u2013 concrete pour and curing", "qty": 1400, "unit": "m3", "prod": 540, "crews": 1, "dur": 6, "s": 459, "f": 464, "ms": "M16", "mf": "M16", "men": 16, "conc": 1400, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR110", "wbs": "1.2.3.1", "name": "CMU external walls 250 mm (BOQ 2.2.2.1)", "qty": 700, "unit": "m3", "prod": 12, "crews": 2, "dur": 30, "s": 424, "f": 453, "ms": "M14", "mf": "M15", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR120", "wbs": "1.2.3.1", "name": "CMU parapet 150 mm (BOQ 2.2.2.2)", "qty": 220, "unit": "m2", "prod": 70, "crews": 1, "dur": 4, "s": 469, "f": 472, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR130", "wbs": "1.2.3.1", "name": "Decorative aluminium louvres (BOQ 2.2.2.3)", "qty": 1200, "unit": "m2", "prod": 40, "crews": 2, "dur": 15, "s": 485, "f": 499, "ms": "M16", "mf": "M17", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR140", "wbs": "1.2.3.1", "name": "Green wall system (BOQ 2.2.2.4)", "qty": 300, "unit": "m2", "prod": 25, "crews": 2, "dur": 6, "s": 500, "f": 505, "ms": "M17", "mf": "M17", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR150", "wbs": "1.2.3.1", "name": "Aluminium windows (BOQ 2.2.2.19)", "qty": 350, "unit": "m2", "prod": 25, "crews": 2, "dur": 7, "s": 453, "f": 459, "ms": "M15", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR160", "wbs": "1.2.3.1", "name": "Steel doors 900x2150 (BOQ 2.2.2.17)", "qty": 7, "unit": "nos", "prod": 4, "crews": 2, "dur": 1, "s": 459, "f": 459, "ms": "M16", "mf": "M16", "men": 8, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR170", "wbs": "1.2.3.1", "name": "Roll-up doors 5x5 m (BOQ 2.2.2.18)", "qty": 3, "unit": "nos", "prod": 1, "crews": 2, "dur": 2, "s": 460, "f": 461, "ms": "M16", "mf": "M16", "men": 8, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR180", "wbs": "1.2.3.1", "name": "Granite skirting 500 mm (BOQ 2.2.2.21)", "qty": 250, "unit": "m", "prod": 25, "crews": 2, "dur": 5, "s": 462, "f": 466, "ms": "M16", "mf": "M16", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR210", "wbs": "1.2.3.2", "name": "Cement plaster \u2013 external walls (BOQ 2.2.2.5)", "qty": 3500, "unit": "m2", "prod": 100, "crews": 3, "dur": 12, "s": 445, "f": 456, "ms": "M15", "mf": "M15", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR220", "wbs": "1.2.3.2", "name": "Cement plaster \u2013 internal walls (BOQ 2.2.2.6)", "qty": 3000, "unit": "m2", "prod": 120, "crews": 3, "dur": 9, "s": 457, "f": 465, "ms": "M16", "mf": "M16", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR230", "wbs": "1.2.3.2", "name": "Cement plaster \u2013 ceilings (BOQ 2.2.2.7)", "qty": 2000, "unit": "m2", "prod": 80, "crews": 3, "dur": 9, "s": 471, "f": 479, "ms": "M16", "mf": "M16", "men": 24, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR310", "wbs": "1.2.3.3", "name": "Emulsion paint \u2013 ceilings (BOQ 2.2.2.8)", "qty": 2000, "unit": "m2", "prod": 250, "crews": 3, "dur": 3, "s": 482, "f": 484, "ms": "M16", "mf": "M16", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR320", "wbs": "1.2.3.3", "name": "Interior acrylic paint \u2013 walls (BOQ 2.2.2.9)", "qty": 3000, "unit": "m2", "prod": 250, "crews": 3, "dur": 4, "s": 485, "f": 488, "ms": "M16", "mf": "M17", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR330", "wbs": "1.2.3.3", "name": "Exterior C5 coastal paint (BOQ 2.2.2.10)", "qty": 3500, "unit": "m2", "prod": 150, "crews": 3, "dur": 8, "s": 477, "f": 484, "ms": "M16", "mf": "M16", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR410", "wbs": "1.2.3.4", "name": "Trowel finish with hardener, floors (BOQ 2.2.2.11)", "qty": 2000, "unit": "m2", "prod": 300, "crews": 2, "dur": 4, "s": 466, "f": 469, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR420", "wbs": "1.2.3.4", "name": "Epoxy coating system, floors (BOQ 2.2.2.12)", "qty": 750, "unit": "m2", "prod": 200, "crews": 2, "dur": 2, "s": 489, "f": 490, "ms": "M17", "mf": "M17", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR510", "wbs": "1.2.3.5", "name": "Roof slope \u2013 light concrete (BOQ 2.2.2.16)", "qty": 2200, "unit": "m2", "prod": 250, "crews": 2, "dur": 5, "s": 471, "f": 475, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR520", "wbs": "1.2.3.5", "name": "Roof waterproofing (BOQ 2.2.2.15)", "qty": 2200, "unit": "m2", "prod": 250, "crews": 2, "dur": 5, "s": 478, "f": 482, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR530", "wbs": "1.2.3.5", "name": "Roof thermal insulation (BOQ 2.2.2.14)", "qty": 2200, "unit": "m2", "prod": 400, "crews": 2, "dur": 3, "s": 485, "f": 487, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR540", "wbs": "1.2.3.5", "name": "Roof mosaic tiles (BOQ 2.2.2.13)", "qty": 2200, "unit": "m2", "prod": 100, "crews": 3, "dur": 8, "s": 488, "f": 495, "ms": "M17", "mf": "M17", "men": 36, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "AR550", "wbs": "1.2.3.5", "name": "Down spouts (BOQ 2.2.2.20)", "qty": 100, "unit": "m", "prod": 40, "crews": 1, "dur": 3, "s": 476, "f": 478, "ms": "M16", "mf": "M16", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EQ110", "wbs": "1.2.4", "name": "Overhead crane 20 t \u2013 rails, install, load test (BOQ 2.2.4.3)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 15, "s": 485, "f": 499, "ms": "M16", "mf": "M17", "men": 16, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EQ120", "wbs": "1.2.4", "name": "Stop logs and sluice gates \u2013 install and test (BOQ 2.2.1.6-7)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 30, "s": 361, "f": 390, "ms": "M12", "mf": "M13", "men": 8, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EQ130", "wbs": "1.2.4", "name": "Vertical turbine pumps \u2013 installation, 19 nos (BOQ 2.2.4.1)", "qty": 19, "unit": "pump", "prod": 0.33, "crews": 2, "dur": 29, "s": 500, "f": 528, "ms": "M17", "mf": "M18", "men": 16, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EQ140", "wbs": "1.2.4", "name": "Traveling water screens \u2013 installation, 6 nos (BOQ 2.2.4.2)", "qty": 6, "unit": "screen", "prod": 0.14, "crews": 2, "dur": 21, "s": 500, "f": 520, "ms": "M17", "mf": "M18", "men": 16, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EL110", "wbs": "1.2.5", "name": "Cable ladder trays 1,000 m (BOQ 2.2.3.1-4)", "qty": 1000, "unit": "m", "prod": 60, "crews": 3, "dur": 6, "s": 478, "f": 483, "ms": "M16", "mf": "M16", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EL120", "wbs": "1.2.5", "name": "Sockets, outlets, disconnect switches (BOQ 2.2.3.5-8)", "qty": 31, "unit": "nos", "prod": 6, "crews": 2, "dur": 3, "s": 466, "f": 468, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EL130", "wbs": "1.2.5", "name": "High-bay luminaires and lighting outlets (BOQ 2.2.3.14-16)", "qty": 54, "unit": "nos", "prod": 8, "crews": 3, "dur": 3, "s": 480, "f": 482, "ms": "M16", "mf": "M16", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EL140", "wbs": "1.2.5", "name": "DB-PS and DB-VAC-PS \u2013 install and termination (BOQ 2.2.3.12-13)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 4, "s": 469, "f": 472, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "EL150", "wbs": "1.2.5", "name": "Cable insulation tests and circuit checks", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 7, "s": 483, "f": 489, "ms": "M16", "mf": "M17", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS110", "wbs": "1.2.6", "name": "Exhaust fans EXF-01/02, 20 nos (BOQ 2.2.4.17-18)", "qty": 20, "unit": "nos", "prod": 2, "crews": 2, "dur": 5, "s": 478, "f": 482, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS120", "wbs": "1.2.6", "name": "Fresh-air louvres, 20 nos (BOQ 2.2.4.19-20)", "qty": 20, "unit": "nos", "prod": 4, "crews": 2, "dur": 3, "s": 454, "f": 456, "ms": "M15", "mf": "M15", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS130", "wbs": "1.2.6", "name": "HVAC builder's work and ductwork (BOQ 2.2.4.21)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 12, "s": 454, "f": 465, "ms": "M15", "mf": "M16", "men": 6, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS210", "wbs": "1.2.6", "name": "Self-contained fire units at pumps, 19 nos (BOQ 2.2.4.4)", "qty": 19, "unit": "nos", "prod": 4, "crews": 2, "dur": 3, "s": 515, "f": 517, "ms": "M17", "mf": "M17", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS220", "wbs": "1.2.6", "name": "Extinguishers, hose stations, valves, flow switches (BOQ 2.2.4.5-12)", "qty": 18, "unit": "nos", "prod": 4, "crews": 2, "dur": 3, "s": 480, "f": 482, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS230", "wbs": "1.2.6", "name": "Fire water pipework HDPE DN250, PE 90, steel 40 (BOQ 2.2.4.7,9,10)", "qty": 84, "unit": "m", "prod": 25, "crews": 2, "dur": 2, "s": 372, "f": 373, "ms": "M13", "mf": "M13", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS310", "wbs": "1.2.6", "name": "Rainwater UPVC pipes and roof drains (BOQ 2.2.4.13-15)", "qty": 150, "unit": "m", "prod": 25, "crews": 2, "dur": 3, "s": 454, "f": 456, "ms": "M15", "mf": "M15", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "MS320", "wbs": "1.2.6", "name": "PP-R cold water pipe and hose bibb (BOQ 2.2.4.16-17)", "qty": 24, "unit": "m", "prod": 25, "crews": 2, "dur": 1, "s": 457, "f": 457, "ms": "M16", "mf": "M16", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC110", "wbs": "1.2.7", "name": "I&C conduits and cable runs (BOQ 2.2.5.32-62)", "qty": 4440, "unit": "m", "prod": 150, "crews": 3, "dur": 10, "s": 478, "f": 487, "ms": "M16", "mf": "M16", "men": 15, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC210", "wbs": "1.2.7", "name": "Fire alarm devices, modules and cabling (BOQ 2.2.5.24-35)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 6, "s": 480, "f": 485, "ms": "M16", "mf": "M16", "men": 10, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC220", "wbs": "1.2.7", "name": "PA/VA system (BOQ 2.2.5.36-43)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 480, "f": 482, "ms": "M16", "mf": "M16", "men": 5, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC230", "wbs": "1.2.7", "name": "Access control (BOQ 2.2.5.44-49)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 462, "f": 464, "ms": "M16", "mf": "M16", "men": 5, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC240", "wbs": "1.2.7", "name": "Telephone and data (BOQ 2.2.5.50-56)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 3, "s": 480, "f": 482, "ms": "M16", "mf": "M16", "men": 5, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC250", "wbs": "1.2.7", "name": "CCTV (BOQ 2.2.5.57-63)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 5, "s": 485, "f": 489, "ms": "M16", "mf": "M17", "men": 10, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC310", "wbs": "1.2.7", "name": "Field instruments: radar level and pressure transmitters (BOQ 2.2.5.21-23)", "qty": 23, "unit": "nos", "prod": 3, "crews": 2, "dur": 4, "s": 529, "f": 532, "ms": "M18", "mf": "M18", "men": 10, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC410", "wbs": "1.2.7", "name": "DCS cabinets, servers, workstations, consoles (BOQ 2.2.5.1-12)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 15, "s": 480, "f": 494, "ms": "M16", "mf": "M17", "men": 10, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "IC420", "wbs": "1.2.7", "name": "DCS integration, loop checks, SAT", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 30, "s": 533, "f": 562, "ms": "M18", "mf": "M19", "men": 10, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC10", "wbs": "1.2.8", "name": "Mechanical completion and punch list", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 10, "s": 529, "f": 538, "ms": "M18", "mf": "M18", "men": 18, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC20", "wbs": "1.2.8", "name": "Energisation (permanent power)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 5, "s": 539, "f": 543, "ms": "M18", "mf": "M18", "men": 12, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC30", "wbs": "1.2.8", "name": "Pre-commissioning (dry): loop checks, motor runs", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 30, "s": 563, "f": 592, "ms": "M19", "mf": "M20", "men": 29, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC40", "wbs": "1.2.8", "name": "FLOODING of pump house permitted (milestone)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 0, "s": 593, "f": 593, "ms": "M20", "mf": "M20", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC50", "wbs": "1.2.8", "name": "Wet commissioning, performance and reliability tests", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 30, "s": 594, "f": 623, "ms": "M20", "mf": "M21", "men": 29, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"id": "TC60", "wbs": "1.2.8", "name": "END \u2013 Pump House works complete (milestone)", "qty": null, "unit": "", "prod": null, "crews": null, "dur": 0, "s": 623, "f": 623, "ms": "M21", "mf": "M21", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}], "months": [{"m": 1, "lab": "M01", "men": 33.2, "conc": 651.2, "rebar": 71.6, "form": 0, "exc": 0}, {"m": 2, "lab": "M02", "men": 42, "conc": 2105.9, "rebar": 231.7, "form": 0, "exc": 0}, {"m": 3, "lab": "M03", "men": 42, "conc": 2105.9, "rebar": 231.7, "form": 0, "exc": 0}, {"m": 4, "lab": "M04", "men": 42, "conc": 2105.9, "rebar": 231.7, "form": 0, "exc": 0}, {"m": 5, "lab": "M05", "men": 42, "conc": 2105.9, "rebar": 231.7, "form": 0, "exc": 0}, {"m": 6, "lab": "M06", "men": 40.5, "conc": 1593.3, "rebar": 175.3, "form": 0, "exc": 0}, {"m": 7, "lab": "M07", "men": 30.1, "conc": 0, "rebar": 0, "form": 0, "exc": 31174.7}, {"m": 8, "lab": "M08", "men": 27.7, "conc": 0, "rebar": 0, "form": 0, "exc": 26963.8}, {"m": 9, "lab": "M09", "men": 57.8, "conc": 5550.0, "rebar": 636.6, "form": 0, "exc": 0}, {"m": 10, "lab": "M10", "men": 84.4, "conc": 4067.3, "rebar": 696.2, "form": 10652.5, "exc": 0}, {"m": 11, "lab": "M11", "men": 65.2, "conc": 4067.3, "rebar": 399.2, "form": 9352.7, "exc": 0}, {"m": 12, "lab": "M12", "men": 46.6, "conc": 2425.3, "rebar": 295.0, "form": 3243.5, "exc": 0}, {"m": 13, "lab": "M13", "men": 63.1, "conc": 1225, "rebar": 165.5, "form": 4287.5, "exc": 0}, {"m": 14, "lab": "M14", "men": 50.4, "conc": 875, "rebar": 118.2, "form": 4375, "exc": 0}, {"m": 15, "lab": "M15", "men": 102.6, "conc": 0, "rebar": 189.2, "form": 6766.7, "exc": 0}, {"m": 16, "lab": "M16", "men": 76.1, "conc": 1400, "rebar": 0, "form": 233.3, "exc": 0}, {"m": 17, "lab": "M17", "men": 55.9, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 18, "lab": "M18", "men": 27.9, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 19, "lab": "M19", "men": 25.8, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 20, "lab": "M20", "men": 31.1, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 21, "lab": "M21", "men": 14.3, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 22, "lab": "M22", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 23, "lab": "M23", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 24, "lab": "M24", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 25, "lab": "M25", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 26, "lab": "M26", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 27, "lab": "M27", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 28, "lab": "M28", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 29, "lab": "M29", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}, {"m": 30, "lab": "M30", "men": 0, "conc": 0, "rebar": 0, "form": 0, "exc": 0}], "rows": [{"code": "1.1.1", "name": "Mobilisation and preparation", "s": 1, "f": 21}, {"code": "1.1.2", "name": "Diaphragm wall (placeholder)", "s": 22, "f": 185}, {"code": "1.1.3", "name": "Dewatering", "s": 176, "f": 593}, {"code": "1.1.4", "name": "Excavation", "s": 187, "f": 238}, {"code": "1.1.5", "name": "Replacement fill", "s": 239, "f": 246}, {"code": "1.2.1.1", "name": "Blinding and waterproofing", "s": 247, "f": 254}, {"code": "1.2.1.2", "name": "Raft", "s": 254, "f": 276}, {"code": "1.2.1.3", "name": "Walls, fins and counterforts (zones A/B, 3 lifts)", "s": 271, "f": 329}, {"code": "1.2.1.4", "name": "Top slab (+3.0 to +4.0)", "s": 327, "f": 351}, {"code": "1.2.1.5", "name": "Strength hold and structural backfill", "s": 352, "f": 371}, {"code": "1.2.2", "name": "Superstructure (3 stages)", "s": 358, "f": 464}, {"code": "1.2.3", "name": "Architecture and finishes", "s": 424, "f": 505}, {"code": "1.2.4", "name": "Mechanical equipment (crane, gates, pumps, screens)", "s": 361, "f": 528}, {"code": "1.2.5", "name": "Electrical", "s": 466, "f": 489}, {"code": "1.2.6", "name": "Mechanical services (HVAC, fire, drainage)", "s": 372, "f": 517}, {"code": "1.2.7", "name": "Instrumentation and control", "s": 462, "f": 562}, {"code": "1.2.8", "name": "Testing, commissioning and flooding", "s": 529, "f": 623}], "miles": [], "end": 623, "monthDays": 30.4, "startMonth": 1, "contractMonths": 24, "eq": {"exc": 3, "br": 3, "trucks": 6, "hoist": 2, "mixers": 8, "pumps": 3, "towers": 2, "mobile": 1, "drills": 2}, "q": {"panelsMain": 96, "panelsFin": 36, "panelsRing": 132, "panelsRamp": 0, "fins": 18, "wells": 14, "raftPours": 5, "raftVol": 4440, "excVol": 58138, "footprint": 3700, "perim": 255}};
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ACTS=D.acts, BY={}; ACTS.forEach(a=>BY[a.id]=a);
+const END=D.end, MD=D.monthDays, SM=D.startMonth;
+const mOf=d=>SM+Math.floor((Math.max(d,1)-1)/MD);
+const mLab=m=>'M'+String(m).padStart(2,'0');
+const P=(id,t)=>{const a=BY[id]; if(!a) return 0; return clamp((t-a.s+1)/(a.f-a.s+1),0,1);};
+const fmt=n=>Math.round(n).toLocaleString('en-US');
+
+if(typeof THREE==='undefined'){ $('msg').style.display='flex'; $('msg').textContent='The 3D engine could not be loaded (three.js from cdnjs). Check the connection and reload.'; return; }
+
+/* ------------------------------------------------------------ constants (m) */
+const GLV=3.7, RT=-8.5, RB=-9.7, PB=-10.0, FM=-11.0, WT=3.0, ST=4.0;
+const FOOT=[[0,-32.95],[16,-32.95],[45.4,-20.625],[71.3,-20.625],[71.3,20.625],[45.4,20.625],[16,32.95],[0,32.95]];
+const XA=-5.58, XB=1.935, XC=9.17;
+const ZP=[-34.475,-27.65]; for(let i=0;i<9;i++) ZP.push(ZP[ZP.length-1]+6.2); ZP.push(34.475);
+const LV=[[18.6,'Parapet top'],[17.3,'Roof / stage 3 (TOC)'],[13.43,'Crane runway beams'],[10.9,'Beams (stage 1, TOC)'],[8.8,'Floor level'],[6.7,'Beams / walls (TOC)'],[4.0,'Operating floor (slab top)'],[3.7,'Ground (FGL)'],[0.39,'HWL'],[-4.27,'LWL clean'],[-5.107,'LWL fouling'],[-7.5,'Gate / intake invert'],[-8.5,'Raft top'],[-9.7,'Raft bottom'],[-11.0,'Excavation formation'],[-28.3,'D-wall toe']];
+
+/* ------------------------------------------------------------ helpers */
+function polyArea(p){let a=0;for(let i=0;i<p.length;i++){const q=p[(i+1)%p.length];a+=p[i][0]*q[1]-q[0]*p[i][1];}return a/2;}
+function offsetPoly(p,d){const n=p.length,sg=Math.sign(polyArea(p)),L=[];
+ for(let i=0;i<n;i++){const a=p[i],b=p[(i+1)%n];let dx=b[0]-a[0],dz=b[1]-a[1];const l=Math.hypot(dx,dz);dx/=l;dz/=l;const nx=sg>0?dz:-dz,nz=sg>0?-dx:dx;L.push({p:[a[0]+nx*d,a[1]+nz*d],d:[dx,dz]});}
+ const o=[];for(let i=0;i<n;i++){const a=L[(i+n-1)%n],b=L[i];const den=a.d[0]*b.d[1]-a.d[1]*b.d[0];if(Math.abs(den)<1e-9){o.push([b.p[0],b.p[1]]);continue;}const t=((b.p[0]-a.p[0])*b.d[1]-(b.p[1]-a.p[1])*b.d[0])/den;o.push([a.p[0]+a.d[0]*t,a.p[1]+a.d[1]*t]);}return o;}
+function shapeOf(poly,holes){const s=new THREE.Shape(poly.map(q=>new THREE.Vector2(q[0],-q[1])));(holes||[]).forEach(h=>s.holes.push(new THREE.Path(h.map(q=>new THREE.Vector2(q[0],-q[1])))));return s;}
+function prismGeo(poly,holes){const g=new THREE.ExtrudeGeometry(shapeOf(poly,holes),{depth:1,bevelEnabled:false});g.rotateX(-Math.PI/2);g.userData.poly=poly;g.userData.holes=holes||[];return g;}
+function clipX(poly,a,b){const cl=(p,ins,it)=>{const o=[];for(let i=0;i<p.length;i++){const A=p[i],B=p[(i+1)%p.length],ia=ins(A),ib=ins(B);if(ia&&ib)o.push(B);else if(ia&&!ib)o.push(it(A,B));else if(!ia&&ib){o.push(it(A,B));o.push(B);}}return o;};
+ let p=cl(poly,q=>q[0]>=a,(A,B)=>{const t=(a-A[0])/(B[0]-A[0]);return[a,A[1]+t*(B[1]-A[1])];});
+ return cl(p,q=>q[0]<=b,(A,B)=>{const t=(b-A[0])/(B[0]-A[0]);return[b,A[1]+t*(B[1]-A[1])];});}
+function rectPoly(x0,z0,x1,z1){return[[x0,z0],[x1,z0],[x1,z1],[x0,z1]];}
+function along(poly,dist){const n=poly.length;let tot=0;const Ls=[];for(let i=0;i<n;i++){const a=poly[i],b=poly[(i+1)%n];Ls.push(Math.hypot(b[0]-a[0],b[1]-a[1]));tot+=Ls[i];}
+ let d=((dist%tot)+tot)%tot;for(let i=0;i<n;i++){if(d<=Ls[i]){const a=poly[i],b=poly[(i+1)%n],dx=(b[0]-a[0])/Ls[i],dz=(b[1]-a[1])/Ls[i];return{x:a[0]+dx*d,z:a[1]+dz*d,dx,dz};}d-=Ls[i];}return null;}
+function perimeter(poly){let t=0;for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length];t+=Math.hypot(b[0]-a[0],b[1]-a[1]);}return t;}
+
+/* ------------------------------------------------------------ renderer / scene */
+const view=$('view'), canvas=$('gl');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(40,1,0.5,4000);
+scene.add(new THREE.HemisphereLight(0xFFFFFF,0x6B7280,0.8));
+const sun=new THREE.DirectionalLight(0xFFFFFF,0.7); sun.position.set(-60,120,80); scene.add(sun);
+const sun2=new THREE.DirectionalLight(0xFFFFFF,0.3); sun2.position.set(90,40,-60); scene.add(sun2);
+const M=new THREE.Group(); scene.add(M);
+let dirty=true;const LABELS=[];
+function sceneBg(){const c=getComputedStyle(document.documentElement).getPropertyValue('--scene').trim()||'#DDE5EC';scene.background=new THREE.Color(c);dirty=true;}
+
+const mk=(c,o)=>new THREE.MeshLambertMaterial(Object.assign({color:c,side:THREE.DoubleSide},o||{}));
+const MAT={concrete:mk(0xA9ACAE),raft:mk(0x9C9E9D),dwall:mk(0x588087),guide:mk(0x819FA4),amber:mk(0xCCAE81),amberT:mk(0xCCAE81,{transparent:true,opacity:.28,depthWrite:false}),rebar:mk(0xBF9972,{transparent:true,opacity:.42}),form:mk(0x7D9AB7,{transparent:true,opacity:.32}),
+ soil:mk(0x897B6A),ground:mk(0xA9ABA2),backfill:mk(0xAB9879,{transparent:true,opacity:.9}),replace:mk(0x8B8880),plain:mk(0xBDBDB8),membrane:mk(0x23272A),
+ cmu:mk(0xB5B1A8),plaster:mk(0xC9C2B3),paint:mk(0xDCD3BF),louvre:mk(0x4F5B63),green:mk(0x5C7856),glass:mk(0x91AEBC,{transparent:true,opacity:.55}),door:mk(0x5E5042),rollup:mk(0x8B9298),
+ roofS:mk(0x9A9C9C),roofW:mk(0x1F2326),roofI:mk(0xC2B684),roofT:mk(0x9A9082),steel:mk(0x5E6A73),pump:mk(0x58656F),motor:mk(0x6A737A),tws:mk(0x8F999F),gate:mk(0x485259),crane:mk(0xB79A3E),
+ water:mk(0x799DBC,{transparent:true,opacity:.30}),waterIn:mk(0x799DBC,{transparent:true,opacity:.38}),well:mk(0x4A5B63),pipe:mk(0x8A949B),epoxy:mk(0x6A7C75),slabMat:mk(0xA4A7A8),fire:mk(0x9E4339),tray:mk(0x9AA1A6),light:mk(0xF0E7B8),fan:mk(0x7E8B95),rain:mk(0x6B7F8F)};
+const EDGE=new THREE.LineBasicMaterial({color:0x1A2530,transparent:true,opacity:.18});
+const UB=new THREE.BoxGeometry(1,1,1), UBE=new THREE.EdgesGeometry(UB);
+const UC=new THREE.CylinderGeometry(1,1,1,16);
+
+/* layers */
+const LAYER={}, LDEF=[['ctx','Context'],['ground','Ground plate',1],['soilblock','Surrounding soil block',0],['water','Groundwater / flooding',1],['ctx2','Context: intake pipelines (marine WBS)',1],
+ ['sh','WBS 1.1 Shoring'],['dwall','D-wall + capping beam',1],['tfin','T-fins (placeholder)',0],['wells','Dewatering wells',1],['soil','Soil inside the pit',1],
+ ['bd','WBS 1.2 Building'],['sub','Blinding, raft',1],['walls','Walls, fins, piers, CF',1],['slab','Top slab + falsework',1],['backfill','Structural backfill',1],['frame','Frame: columns, beams, roof slab',1],['cmu','CMU walls, parapet',1],['finish','Louvres, windows, doors, roof layers',1],['equip','Pumps, valves, screens, stop logs, gates, crane',1],['hvac','HVAC: roof fans EXF-01, louvres FAL-01',1],['mlabels','Equipment labels',1],['mep','Electrical, MEP, I&C (symbols)',1],
+ ['mc','Site equipment'],['machines','Construction equipment (animated)',1],['batch','Batching plant, cage yard (schematic)',1],['an','Annotations'],['ruler','Level ruler',1],['levels','Level planes',0],['dims','Dimensions',1],['labels','Labels',1],['grid','Grid',1]];
+LDEF.forEach(l=>{if(l.length>2) LAYER[l[0]]=!!l[2];});
+const layerObjs={}; // static groups
+const ELS=[], PICK=[];
+
+function El(mesh,o){const el=Object.assign({mesh,show:false,y0:0,h:1,base:'center',axis:'y',final:()=>MAT.concrete,layer:'walls',name:'',pre:null,reveal:null,prog:null,custom:null},o);
+ if(el.pre)el.full={p:mesh.position.clone(),s:mesh.scale.clone(),r:mesh.rotation.clone()};mesh.userData.el=el; ELS.push(el); PICK.push(mesh); M.add(mesh); mesh.visible=false; return el;}
+function edgeIt(mesh,geo){const e=new THREE.LineSegments(geo||UBE,EDGE); mesh.add(e);}
+function boxEl(layer,name,act,cx,cz,sx,sz,y0,y1,o){o=o||{};const m=new THREE.Mesh(UB,MAT.concrete);m.position.set(cx,(y0+y1)/2,cz);m.scale.set(sx,y1-y0,sz);if(o.rotY)m.rotation.y=o.rotY;if(o.edges!==false)edgeIt(m);
+ return El(m,Object.assign({layer,name,reveal:act,y0,h:y1-y0,base:'center'},o));}
+function prismEl(layer,name,act,geo,y0,h,o){o=o||{};const m=new THREE.Mesh(geo,MAT.concrete);m.position.y=y0;m.scale.y=h;if(o.edges!==false)edgeIt(m,o.egeo);
+ return El(m,Object.assign({layer,name,reveal:act,y0,h,base:'bottom'},o));}
+function setH(el,k){const m=el.mesh;k=Math.max(k,0.002);
+ if(el.axis==='z'){m.scale.z=el.len*k;m.position.z=el.z0+el.len*k/2;}
+ else if(el.base==='bottom'){m.scale.y=el.h*k;m.position.y=el.y0;}
+ else{m.scale.y=el.h*k;m.position.y=el.y0+el.h*k/2;}}
+function ghostOf(el,t){if(!el.pre)return null;let best=null,bs=-1;for(const p of el.pre){const a=BY[p.act];if(a&&t>=a.s&&a.s>bs){best=p;bs=a.s;}}return best?(best.style==='rebar'?MAT.rebar:MAT.form):null;}
+function updEl(el,t){
+ if(el.custom){el.custom(el,t);return;}
+ const pr=el.prog?el.prog(t):P(el.reveal,t), m=el.mesh;
+ if(pr>=1){el.show=true;setH(el,1);m.material=el.final(t,el);}
+ else if(pr>0){el.show=true;setH(el,pr);m.material=el.growMat?el.growMat(el):(el.pre?MAT.wet:MAT.amber);}
+ else{el.show=false;}
+ if(el.pre)preApply(el,t,pr);
+ m.visible=el.show&&LAYER[el.layer];
+}
+
+/* ------------------------------------------------------------ reinforcement cage and formwork shown before every pour (rebar -> forms -> concrete rises) */
+const MREB=new THREE.LineBasicMaterial({color:0xB0653A}), MTIM=new THREE.LineBasicMaterial({color:0x6B4B2C});
+const MPLY=mk(0xC2A67C,{transparent:true,opacity:.40,depthWrite:false}); MAT.wet=mk(0x7B7F82);
+function sgPush(a,p,q){a.push(p[0],p[1],p[2],q[0],q[1],q[2]);}
+function sgSort(a,ax){const n=a.length/6,ix=[];for(let i=0;i<n;i++)ix.push([i,(a[i*6+ax]+a[i*6+3+ax])/2]);ix.sort((u,v)=>u[1]-v[1]);const o=[];ix.forEach(u=>{for(let k=0;k<6;k++)o.push(a[u[0]*6+k]);});return o;}
+function cagePlate(dim,ti){const cov=.07,out=[],ax=[0,1,2].filter(i=>i!==ti),A=ax[0],B=ax[1];
+ let sp=Math.min(1.2,Math.max(.25,Math.sqrt(dim[A]*dim[B]*4/2200)));
+ for(const s of[-1,1]){const c=s*(dim[ti]/2-cov),nA=Math.max(1,Math.round(dim[A]/sp)),nB=Math.max(1,Math.round(dim[B]/sp));
+  for(let i=0;i<=nA;i++){const u=-dim[A]/2+cov+(dim[A]-2*cov)*i/nA,p=[0,0,0],q=[0,0,0];p[ti]=q[ti]=c;p[A]=q[A]=u;p[B]=-dim[B]/2+cov;q[B]=dim[B]/2-cov;sgPush(out,p,q);}
+  for(let j=0;j<=nB;j++){const v=-dim[B]/2+cov+(dim[B]-2*cov)*j/nB,p=[0,0,0],q=[0,0,0];p[ti]=q[ti]=c+s*.03;p[B]=q[B]=v;p[A]=-dim[A]/2+cov;q[A]=dim[A]/2-cov;sgPush(out,p,q);}}
+ return sgSort(out,1);}
+function cageBar(dim){const cov=.06,out=[];let la=0;for(let i=1;i<3;i++)if(dim[i]>dim[la])la=i;const o=[0,1,2].filter(i=>i!==la),c1=o[0],c2=o[1];
+ const a1=dim[c1]/2-cov,a2=dim[c2]/2-cov,L=dim[la]/2-.02,pts=[[-a1,-a2],[a1,-a2],[a1,a2],[-a1,a2]];
+ if(dim[c1]>.65){pts.push([0,-a2],[0,a2]);} if(dim[c2]>.65){pts.push([-a1,0],[a1,0]);}
+ pts.forEach(q=>{const p=[0,0,0],r=[0,0,0];p[c1]=r[c1]=q[0];p[c2]=r[c2]=q[1];p[la]=-L;r[la]=L;sgPush(out,p,r);});
+ const n=Math.max(2,Math.round(dim[la]/.22));
+ for(let i=0;i<=n;i++){const u=-L+2*L*i/n,k=[[-a1,-a2],[a1,-a2],[a1,a2],[-a1,a2]];for(let j=0;j<4;j++){const p=[0,0,0],r=[0,0,0],s=k[j],e=k[(j+1)%4];p[la]=r[la]=u;p[c1]=s[0];p[c2]=s[1];r[c1]=e[0];r[c2]=e[1];sgPush(out,p,r);}}
+ return sgSort(out,la);}
+function cagePrism(poly,holes,h){const out=[],cov=.07,xs=poly.map(p=>p[0]),zs=poly.map(p=>p[1]),x0=Math.min(...xs),x1=Math.max(...xs),z0=Math.min(...zs),z1=Math.max(...zs),sp=Math.max(.9,Math.sqrt((x1-x0)*(z1-z0)*4/2600));
+ const ins=(x,z)=>inPoly(poly,x,z)&&!(holes||[]).some(hh=>inPoly(hh,x,z));
+ const fam=(dirX,y)=>{const a0=dirX?z0:x0,a1=dirX?z1:x1,b0=dirX?x0:z0,b1=dirX?x1:z1;for(let a=a0+sp/2;a<a1;a+=sp){let st=null;for(let b=b0;b<=b1+.01;b+=.3){const x=dirX?b:a,z=dirX?a:b,i=ins(x,z);if(i&&st===null)st=b;if((!i||b+.3>b1)&&st!==null){const e=i?b:b-.3;const p=dirX?[st+.1,y,a]:[a,y,st+.1],q=dirX?[e-.1,y,a]:[a,y,e-.1];if(Math.hypot(q[0]-p[0],q[2]-p[2])>.3)sgPush(out,p,q);st=null;}}}};
+ fam(true,cov);fam(false,cov+.04);fam(true,h-cov-.04);fam(false,h-cov);
+ return sgSort(out,0);}
+function formBox(dim,ti){const g=new THREE.Group(),m=new THREE.Mesh(UB,MPLY);m.scale.set(dim[0]+.1,dim[1],dim[2]+.1);g.add(m);
+ const out=[];let la=0;for(let i=1;i<3;i++)if(dim[i]>dim[la])la=i;
+ if(ti>=0){const ax=[0,1,2].filter(i=>i!==ti),A=ax[0],B=ax[1];for(const s of[-1,1]){const c=s*(dim[ti]/2+.06);
+   const nB=Math.max(1,Math.round(dim[B]/.6)),nA=Math.max(1,Math.round(dim[A]/1.2));
+   for(let j=0;j<=nB;j++){const v=-dim[B]/2+dim[B]*j/nB,p=[0,0,0],q=[0,0,0];p[ti]=q[ti]=c;p[B]=q[B]=v;p[A]=-dim[A]/2;q[A]=dim[A]/2;if(B!==1||nB<400)sgPush(out,p,q);}
+   for(let i=0;i<=nA;i++){const u=-dim[A]/2+dim[A]*i/nA,p=[0,0,0],q=[0,0,0];p[ti]=q[ti]=c+s*.04;p[A]=q[A]=u;p[B]=-dim[B]/2;q[B]=dim[B]/2;sgPush(out,p,q);}}}
+ else{[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(k=>{const p=[0,0,0],q=[0,0,0],o=[0,1,2].filter(i=>i!==la);p[o[0]]=q[o[0]]=k[0]*(dim[o[0]]/2+.06);p[o[1]]=q[o[1]]=k[1]*(dim[o[1]]/2+.06);p[la]=-dim[la]/2;q[la]=dim[la]/2;sgPush(out,p,q);});
+  const n=Math.max(1,Math.round(dim[la]/.9));for(let i=0;i<=n;i++){const u=-dim[la]/2+dim[la]*i/n,o=[0,1,2].filter(i=>i!==la),k=[[-1,-1],[1,-1],[1,1],[-1,1]];for(let j=0;j<4;j++){const p=[0,0,0],q=[0,0,0],s=k[j],e=k[(j+1)%4];p[la]=q[la]=u;p[o[0]]=s[0]*(dim[o[0]]/2+.06);p[o[1]]=s[1]*(dim[o[1]]/2+.06);q[o[0]]=e[0]*(dim[o[0]]/2+.06);q[o[1]]=e[1]*(dim[o[1]]/2+.06);sgPush(out,p,q);}}}
+ const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(out,3));g.add(new THREE.LineSegments(ge,MTIM));return g;}
+const BARM=new THREE.MeshLambertMaterial({color:0x8E5836});
+function barObj(arr,th){const n=arr.length/6,im=new THREE.InstancedMesh(UB,BARM,n),d=new THREE.Object3D();for(let i=0;i<n;i++){const a=i*6;d.position.set((arr[a]+arr[a+3])/2,(arr[a+1]+arr[a+4])/2,(arr[a+2]+arr[a+5])/2);d.scale.set(Math.abs(arr[a+3]-arr[a])+th,Math.abs(arr[a+4]-arr[a+1])+th,Math.abs(arr[a+5]-arr[a+2])+th);d.updateMatrix();im.setMatrixAt(i,d.matrix);}im.instanceMatrix.needsUpdate=true;im.count=0;im.frustumCulled=false;return im;}
+function lineObj(arr,mat){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));const l=new THREE.LineSegments(g,mat);l.frustumCulled=false;return l;}
+function buildPre(el){const f=el.full,m=el.mesh,geo=m.geometry,S={};
+ const root=new THREE.Group(),fr=new THREE.Group();M.add(root);M.add(fr);
+ if(geo===UB){const dim=[f.s.x,f.s.y,f.s.z];let ti=-1,mn=0;for(let i=1;i<3;i++)if(dim[i]<dim[mn])mn=i;const o=[0,1,2].filter(i=>i!==mn);
+  if(dim[mn]<=1.25&&dim[o[0]]>=2.4*dim[mn]&&dim[o[1]]>=2.4*dim[mn])ti=mn;
+  const arr=ti>=0?cagePlate(dim,ti):cageBar(dim);root.add(barObj(arr,.04));S.n=arr.length/6;
+  fr.add(formBox(dim,ti));
+  [root,fr].forEach(g=>{g.position.copy(f.p);g.rotation.copy(f.r);});}
+ else if(geo.userData&&geo.userData.poly){const poly=geo.userData.poly,holes=geo.userData.holes,h=f.s.y;
+  const arr=cagePrism(poly,holes,h);root.add(barObj(arr,.04));S.n=arr.length/6;root.position.set(0,f.p.y,0);
+  // edge boards (and a soffit sheet under slabs)
+  fr.position.set(0,f.p.y,0);const bd=(a,b)=>{const L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L<.05)return;const q=new THREE.Mesh(UB,MPLY);q.scale.set(L,h,.06);q.position.set((a[0]+b[0])/2,h/2,(a[1]+b[1])/2);q.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);fr.add(q);};
+  const rings=[poly].concat(holes||[]);rings.forEach(r=>r.forEach((p,i)=>bd(p,r[(i+1)%r.length])));
+  if(el.layer==='slab'){const s=new THREE.Mesh(prismGeo(poly,holes),MPLY);s.scale.y=.04;s.position.y=-.05;fr.add(s);}}
+ else{geo.computeBoundingBox();const bb=geo.boundingBox,sz=[(bb.max.x-bb.min.x)*f.s.x,(bb.max.y-bb.min.y)*f.s.y,(bb.max.z-bb.min.z)*f.s.z],cn=[(bb.max.x+bb.min.x)/2*f.s.x,(bb.max.y+bb.min.y)/2*f.s.y,(bb.max.z+bb.min.z)/2*f.s.z];
+  let mn=0;for(let i=1;i<3;i++)if(sz[i]<sz[mn])mn=i;const o=[0,1,2].filter(i=>i!==mn),ti=(sz[mn]<=1.25&&sz[o[0]]>=2*sz[mn]&&sz[o[1]]>=2*sz[mn])?mn:-1;
+  const arr=ti>=0?cagePlate(sz,ti):cageBar(sz);const lo=barObj(arr,.04);lo.position.set(cn[0],cn[1],cn[2]);root.add(lo);S.n=arr.length/6;
+  const fb=formBox(sz,ti);fb.position.set(cn[0],cn[1],cn[2]);fr.add(fb);[root,fr].forEach(g=>{g.position.copy(f.p);g.rotation.copy(f.r);});}
+ root.userData.on=false;fr.userData.on=false;root.visible=fr.visible=false;S.rb=root;S.fm=fr;el._pre=S;(el.auxList=el.auxList||[]).push(root,fr);return S;}
+function preP(el,style,t){let v=0;for(const p of el.pre)if(p.style===style)v=Math.max(v,P(p.act,t));return v;}
+function preApply(el,t,pr){if(!el.pre)return false;const rs=preP(el,'rebar',t),fs=preP(el,'form',t),nR=rs>0&&pr<1,nF=fs>0&&pr<1;
+ if(!nR&&!nF){if(el._pre){el._pre.rb.userData.on=false;el._pre.fm.userData.on=false;el._pre.rb.visible=el._pre.fm.visible=false;}return false;}
+ const S=el._pre||buildPre(el);S.rb.userData.on=nR;S.fm.userData.on=nF;S.rb.visible=nR&&!!LAYER[el.layer];S.fm.visible=nF&&!!LAYER[el.layer];
+ if(nR){S.rb.children[0].count=Math.max(1,Math.floor(S.n*Math.min(1,rs)));}return true;}
+
+/* ------------------------------------------------------------ labels, lines, dims */
+function label(text,pos,o){o=o||{};const cv=document.createElement('canvas'),cx=cv.getContext('2d');const fs=o.fs||38;cx.font='bold '+fs+'px Arial';const w=Math.ceil(cx.measureText(text).width+30);cv.width=w;cv.height=fs+26;
+ cx.font='bold '+fs+'px Arial';cx.fillStyle=o.bg||'rgba(15,38,58,.9)';const r=14,h=cv.height;cx.beginPath();cx.moveTo(r,0);cx.arcTo(w,0,w,h,r);cx.arcTo(w,h,0,h,r);cx.arcTo(0,h,0,0,r);cx.arcTo(0,0,w,0,r);cx.closePath();cx.fill();
+ cx.fillStyle=o.fg||'#fff';cx.textBaseline='middle';cx.fillText(text,15,h/2+2);
+ const tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+ const sz=o.size||3.4;sp.userData.base=[sz*w/h,sz];sp.scale.set(sz*w/h,sz,1);sp.position.copy(pos);sp.renderOrder=10;LABELS.push(sp);return sp;}
+function lineObj(pts,color,dash){const g=new THREE.BufferGeometry().setFromPoints(pts);let m;if(dash){m=new THREE.LineDashedMaterial({color,dashSize:1.2,gapSize:.8});}else m=new THREE.LineBasicMaterial({color});const l=new THREE.Line(g,m);if(dash)l.computeLineDistances();return l;}
+function group(layer){const g=new THREE.Group();M.add(g);(layerObjs[layer]=layerObjs[layer]||[]).push(g);return g;}
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+function dim(g,a,b,txt,col,off,sz){sz=sz||2.4;col=col||0xCCAE81;g.add(lineObj([a,b],col));const dir=b.clone().sub(a).normalize();let pp=new THREE.Vector3().crossVectors(dir,V(0,1,0));if(pp.lengthSq()<1e-6)pp=V(1,0,0);pp.normalize().multiplyScalar(.9);
+ [a,b].forEach(p=>g.add(lineObj([p.clone().add(pp),p.clone().sub(pp)],col)));const mid=a.clone().add(b).multiplyScalar(.5).add(off||V(0,1.8,0));g.add(label(txt,mid,{size:sz||3.2,bg:'rgba(120,70,0,.92)'}));}
+
+/* ------------------------------------------------------------ construction equipment: detailed models + schedule-driven motion */
+const EQN=D.eq||{};
+let ANIM=true; const CLK={v:0}; const MACH=[];
+const lerp=(a,b,t)=>a+(b-a)*t, smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);}, tri=u=>1-Math.abs(2*(u-Math.floor(u))-1);
+const K={cab:0xC9CBC6,bedc:0x585D61,yel:0xCDAE48,dark:0x24282C,grey:0x8D969D,steel:0xB0B7BC,glass:0x2B4A5E,rub:0x17191B,org:0xB98458,wht:0xE9E9E4,red:0x8D4F4A,blu:0x56677B,cncr:0xA9ADB2,tan:0xA89A74,hose:0x2A2F34};
+const VC=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+const GBOX=new THREE.BoxGeometry(1,1,1), GCYL=new THREE.CylinderGeometry(1,1,1,16,1), GCONE=new THREE.CylinderGeometry(.55,1,1,16,1);
+const _m=new THREE.Matrix4(),_q=new THREE.Quaternion(),_e=new THREE.Euler(),_s=new THREE.Vector3(),_p=new THREE.Vector3(),_n=new THREE.Matrix3(),_v=new THREE.Vector3(),_z=new THREE.Vector3(0,0,1),_d=new THREE.Vector3();
+const RBC={};function rGeo(r){const k=r.toFixed(3);if(RBC[k])return RBC[k];const g=new THREE.BoxGeometry(1,1,1,4,4,4),p=g.attributes.position,n=g.attributes.normal,v=new THREE.Vector3(),c=new THREE.Vector3(),d=new THREE.Vector3();
+ for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(clamp(v.x,-.5+r,.5-r),clamp(v.y,-.5+r,.5-r),clamp(v.z,-.5+r,.5-r));d.copy(v).sub(c);if(d.lengthSq()>1e-12){d.normalize();p.setXYZ(i,c.x+d.x*r,c.y+d.y*r,c.z+d.z*r);n.setXYZ(i,d.x,d.y,d.z);}}return RBC[k]=g;}
+function PBLD(){const pos=[],nor=[],col=[],idx=[];let off=0;
+ function put(g,hex,x,y,z,sx,sy,sz,rx,ry,rz,q){if(q)_q.copy(q);else{_e.set(rx||0,ry||0,rz||0,'YXZ');_q.setFromEuler(_e);}_p.set(x,y,z);_s.set(sx,sy,sz);_m.compose(_p,_q,_s);_n.getNormalMatrix(_m);const c=new THREE.Color(hex),P=g.attributes.position,N=g.attributes.normal,I=g.index,jit=1+(Math.random()-.5)*.08;
+  for(let i=0;i<P.count;i++){const vy=P.getY(i);_v.fromBufferAttribute(P,i).applyMatrix4(_m);pos.push(_v.x,_v.y,_v.z);_v.fromBufferAttribute(N,i).applyMatrix3(_n).normalize();nor.push(_v.x,_v.y,_v.z);const ny=_v.y,f=(.82+.18*(vy+.5))*(ny>.6?1.06:(ny<-.6?.6:1))*jit;col.push(c.r*f,c.g*f,c.b*f);}
+  for(let i=0;i<I.count;i++)idx.push(I.getX(i)+off);off+=P.count;}
+ const api={box:(sx,sy,sz,x,y,z,hex,rx,ry,rz)=>{put(GBOX,hex,x,y,z,sx,sy,sz,rx,ry,rz);return api;},
+  rbox:(sx,sy,sz,x,y,z,hex,rx,ry,rz,r)=>{put(rGeo(r||.1),hex,x,y,z,sx,sy,sz,rx,ry,rz);return api;},
+  cyl:(r,h,x,y,z,hex)=>{put(GCYL,hex,x,y,z,r,h,r,0,0,0);return api;},
+  cylx:(r,h,x,y,z,hex)=>{put(GCYL,hex,x,y,z,r,h,r,0,0,Math.PI/2);return api;},
+  cylz:(r,h,x,y,z,hex)=>{put(GCYL,hex,x,y,z,r,h,r,Math.PI/2,0,0);return api;},
+  cone:(r,h,x,y,z,hex)=>{put(GCONE,hex,x,y,z,r,h,r,0,0,0);return api;},
+  beam:(a,b,t,hex)=>{_d.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=_d.length();_d.normalize();const q=new THREE.Quaternion().setFromUnitVectors(_z,_d);put(GBOX,hex,(a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2,t,t,L,0,0,0,q);return api;},
+  build:()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.setIndex(idx);return new THREE.Mesh(g,VC);}};
+ return api;}
+const grp=(parent,x,y,z)=>{const g=new THREE.Group();g.position.set(x||0,y||0,z||0);if(parent)parent.add(g);return g;};
+function wheel(r,w,tire){const b=PBLD();b.cylx(r,w,0,0,0,K.rub).cylx(r*.62,w*1.04,0,0,0,tire||K.steel).cylx(r*.2,w*1.12,0,0,0,K.dark);return b.build();}
+/* lattice helpers */
+function latticeVert(b,x,z,w,y0,y1,step,t,hex){[[-1,-1],[1,-1],[1,1],[-1,1]].forEach(c=>b.box(t,y1-y0,t,x+c[0]*w/2,(y0+y1)/2,z+c[1]*w/2,hex));
+ for(let y=y0,k=0;y<y1-.01;y+=step,k++){const ya=y,yb=Math.min(y+step,y1);b.box(w,t*.7,t*.7,x,ya,z-w/2,hex).box(w,t*.7,t*.7,x,ya,z+w/2,hex).box(t*.7,t*.7,w,x-w/2,ya,z,hex).box(t*.7,t*.7,w,x+w/2,ya,z,hex);
+  const s=k%2?1:-1;b.beam([x-w/2,ya,z-w/2*s],[x+w/2,yb,z-w/2*s],t*.5,hex).beam([x-w/2,ya,z+w/2*s],[x+w/2,yb,z+w/2*s],t*.5,hex).beam([x-w/2*s,ya,z-w/2],[x-w/2*s,yb,z+w/2],t*.5,hex).beam([x+w/2*s,ya,z-w/2],[x+w/2*s,yb,z+w/2],t*.5,hex);}}
+function latticeZ(b,L,w,h,step,t,hex,tri){ // boom along +z, cross section w x h, centred on origin
+ const xs=tri?[[0,h/2],[-w/2,-h/2],[w/2,-h/2]]:[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]];
+ xs.forEach(c=>b.box(t,t,L,c[0],c[1],L/2,hex));
+ for(let z=0,k=0;z<L-.01;z+=step,k++){const z2=Math.min(z+step,L);for(let i=0;i<xs.length;i++){const a=xs[i],c=xs[(i+1)%xs.length];b.beam([a[0],a[1],k%2?z:z2],[c[0],c[1],k%2?z2:z],t*.55,hex);}
+  if(!tri||true)for(let i=0;i<xs.length;i++){const a=xs[i],c=xs[(i+1)%xs.length];b.beam([a[0],a[1],z],[c[0],c[1],z],t*.5,hex);}}}
+
+/* ------------- machine registry */
+const winOn=(w,t)=>typeof w==='function'?w(t):w.some(id=>{const a=BY[id];return a&&t>=a.s&&t<=a.f;});
+function addM(label,total,g,win,upd){g.visible=false;M.add(g);const m={label,total,g,win,upd,on:false};MACH.push(m);return m;}
+function kf(frames,u){u=u-Math.floor(u);for(let i=0;i<frames.length-1;i++){const a=frames[i],b=frames[i+1];if(u>=a[0]&&u<=b[0]){const k=smooth((u-a[0])/(b[0]-a[0]||1));return a.slice(1).map((v,j)=>lerp(v,b[j+1],k));}}return frames[frames.length-1].slice(1);}
+function chaikin(pts,n){for(let it=0;it<n;it++){const o=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];o.push([.75*a[0]+.25*b[0],.75*a[1]+.25*b[1]],[.25*a[0]+.75*b[0],.25*a[1]+.75*b[1]]);}pts=o;}return pts;}
+function mkPath(pts,closed,n){pts=closed?chaikin(pts,n||3):pts;const P=pts.map(a=>[a[0],a[1]]),cum=[0];const m=closed?P.length:P.length-1;for(let i=0;i<m;i++){const a=P[i],b=P[(i+1)%P.length];cum.push(cum[i]+Math.hypot(b[0]-a[0],b[1]-a[1]));}return{P,cum,L:cum[cum.length-1],closed};}
+function atPath(pa,d){const{P,cum,L,closed}=pa;d=closed?((d%L)+L)%L:clamp(d,0,L);let lo=0,hi=cum.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(cum[mid]<=d)lo=mid;else hi=mid;}
+ const a=P[lo],b=P[(lo+1)%P.length],sl=cum[lo+1]-cum[lo]||1,k=(d-cum[lo])/sl;return{x:lerp(a[0],b[0],k),z:lerp(a[1],b[1],k),dx:(b[0]-a[0])/sl,dz:(b[1]-a[1])/sl};}
+function soilTop(t){return GLV-5*P('S410',t)-5*P('S420',t)-(GLV-10-FM)*P('S430',t);}
+function pitY(t){return soilTop(t)+P('S510',t)*1.0;}
+const PITWIN=['S410','S420','S430','S440'], FILLWIN=['S510'];
+function syncRamp(t){}
+
+
+/* ------------- helpers shared by devices and machines */
+const ANIMS=[]; // per-frame animations that always run while their condition holds: {on:(t)=>bool, upd:(c,t)=>void}
+function strut(mesh,a,b){_d.set(b[0]-a[0],b[1]-a[1],b[2]-a[2]);const L=_d.length();mesh.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);mesh.scale.z=Math.max(L,.01);_d.normalize();mesh.quaternion.setFromUnitVectors(_z,_d);}
+const R2=(a,p)=>[p[0]*Math.cos(a)-p[1]*Math.sin(a),p[0]*Math.sin(a)+p[1]*Math.cos(a)]; // rotate (y,z) about x
+function mkStrut(t,hex){const m=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:hex||K.steel}));m.scale.set(t,t,1);return m;}
+
+/* ------------------------------------------------------------ context: ground, soil, water (closed D-wall ring, no ramp) */
+const PIT=offsetPoly(FOOT,1.6), DWC=offsetPoly(FOOT,2.0), DWO=offsetPoly(FOOT,2.4), WELLP=offsetPoly(FOOT,5.5);
+const BIG=rectPoly(-45,-115,150,115);
+const groundEl=El(new THREE.Mesh(prismGeo(BIG,[DWO]),MAT.ground),{layer:'ground',name:'Ground plate (FGL +3.70)',custom:(el,t)=>{el.show=true;el.mesh.visible=LAYER.ground;}});
+groundEl.mesh.position.y=3.55;groundEl.mesh.scale.y=.15;
+const blockEl=El(new THREE.Mesh(prismGeo(BIG,[DWO]),mk(0x867860,{transparent:true,opacity:.16})),{layer:'soilblock',name:'Surrounding soil',custom:(el,t)=>{el.show=true;el.mesh.visible=LAYER.soilblock;}});
+blockEl.mesh.position.y=-33;blockEl.mesh.scale.y=36.55;
+const soilEl=El(new THREE.Mesh(prismGeo(PIT),MAT.soil),{layer:'soil',name:'Soil inside the pit (excavation)',custom:(el,t)=>{
+ const top=GLV-5*P('S410',t)-5*P('S420',t)-(GLV-5-5-FM)*P('S430',t);const h=top-FM;el.show=h>0.05;el.mesh.scale.y=Math.max(h,0.001);el.mesh.position.y=FM;el.mesh.visible=el.show&&LAYER.soil;}});
+soilEl.mesh.userData.act='S410';
+const wOut=El(new THREE.Mesh(prismGeo(BIG,[DWO]),MAT.water),{layer:'water',name:'Groundwater table outside the wall (+0.40)',custom:(el,t)=>{el.show=true;el.mesh.visible=LAYER.water;}});
+wOut.mesh.position.y=0.4;wOut.mesh.scale.y=.05;
+function wlevel(t){const a=BY['TC40'];if(a&&t>=a.s)return -12+12.39*clamp((t-a.s)/6,0,1);return 0.4-12.4*P('S330',t);}
+const wIn=El(new THREE.Mesh(prismGeo(PIT),MAT.waterIn),{layer:'water',name:'Water level inside the pit / flooding',custom:(el,t)=>{const w=wlevel(t);el.mesh.position.y=w;el.mesh.scale.y=.05;el.show=w>-11.5;el.mesh.visible=el.show&&LAYER.water;}});
+const unpick=el=>{const i=PICK.indexOf(el.mesh);if(i>=0)PICK.splice(i,1);};[groundEl,blockEl,wOut,wIn].forEach(unpick);
+
+/* ------------------------------------------------------------ D-wall: closed ring around the pit (S210) */
+const ringP=[],edgesAll=[];
+(function(){const n=DWC.length;for(let i=0;i<n;i++){const a=DWC[i],b=DWC[(i+1)%n];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const dx=(b[0]-a[0])/L,dz=(b[1]-a[1])/L;
+ edgesAll.push({a,b,L,dx,dz,open:false});const k=Math.max(1,Math.round(L/2.8)),w=L/k;
+ for(let j=0;j<k;j++){const c=(j+.5)*w;ringP.push({cx:a[0]+dx*c,cz:a[1]+dz*c,w:w,ang:-Math.atan2(dz,dx),ex:dx,ez:dz,cls:'r'});}}})();
+const dwOrder=[];(function(){let cum=0,mark=7.5;
+ ringP.forEach(p=>{dwOrder.push({p,fin:false,act:'S210'});cum+=p.w;
+  while(cum>=mark){const ix=-p.ez,iz=p.ex;for(let q=0;q<2;q++){const off=0.4+1.4+2.8*q;dwOrder.push({fin:true,act:'S210',p:{cx:p.cx+ix*off,cz:p.cz+iz*off,w:2.8,ex:ix,ez:iz}});}mark+=15;}});})();
+const NDW=dwOrder.length, NRING=NDW, NRAMPP=0;
+dwOrder.forEach((it,i)=>{const p=it.p;const m=new THREE.Mesh(UB,MAT.dwall);
+ if(it.fin){m.scale.set(0.8,32,2.3);m.position.set(p.cx,GLV-16,p.cz);m.rotation.y=Math.atan2(p.ex,p.ez);}
+ else{m.scale.set(p.w,32,0.8);m.position.set(p.cx,GLV-16,p.cz);m.rotation.y=p.ang;}
+ const th=(i+1)/NDW, th0=i/NDW;
+ El(m,{layer:it.fin?'tfin':'dwall',name:it.fin?'T-fin panel (placeholder)':'D-wall panel '+(i+1),reveal:'S210',custom:(el,t)=>{const pr=P('S210',t);
+  if(pr>=th){el.show=true;el.mesh.material=MAT.dwall;}else if(pr>th0){el.show=true;el.mesh.material=MAT.amberT;}else el.show=false;el.mesh.visible=el.show&&LAYER[el.layer];}});});
+(function(){const E=edgesAll,n=E.length;E.forEach((e,i)=>{const{a,b,L,dx,dz}=e,ang=-Math.atan2(dz,dx),cx=(a[0]+b[0])/2,cz=(a[1]+b[1])/2,th=(i+1)/n,th0=i/n;
+ [-0.7,0.7].forEach(off=>{const m=new THREE.Mesh(UB,MAT.guide);m.scale.set(L,1.0,0.25);m.position.set(cx+(-dz)*off,GLV-0.5,cz+dx*off);m.rotation.y=ang;
+  El(m,{layer:'dwall',name:'Guide wall',reveal:'S130',custom:(el,t)=>{const pr=P('S130',t);el.show=pr>th0;el.mesh.material=pr>=th?MAT.guide:MAT.amber;el.mesh.visible=el.show&&LAYER.dwall;}});});
+ const m=new THREE.Mesh(UB,MAT.concrete);m.scale.set(L,1.0,1.5);m.position.set(cx,GLV+0.5,cz);m.rotation.y=ang;edgeIt(m);
+ El(m,{layer:'dwall',name:'Capping beam',reveal:'S220',custom:(el,t)=>{const pr=P('S220',t);el.show=pr>th0;el.mesh.material=pr>=th?MAT.concrete:MAT.amber;el.mesh.visible=el.show&&LAYER.dwall;}});});})();
+
+/* ------------------------------------------------------------ dewatering wells (ring) */
+const wellPts=[];
+(function(){const per=perimeter(WELLP),n=D.q.wells;for(let i=0;i<n;i++){const pt=along(WELLP,(i+.5)*per/n);wellPts.push([pt.x,pt.z]);}})();
+(function(){const n=wellPts.length;
+ wellPts.forEach((w,i)=>{const m=new THREE.Mesh(UC,MAT.well);m.scale.set(.4,36.5,.4);m.position.set(w[0],-13.05,w[1]);
+  const th=(i+1)/n,th0=i/n;El(m,{layer:'wells',name:'Dewatering well '+(i+1),reveal:'S310',custom:(el,t)=>{const pr=P('S310',t);const on=BY['S330']&&t>=BY['S330'].s&&t<(BY['TC40']?BY['TC40'].s:1e9);
+   el.show=pr>th0;el.mesh.material=pr>=th?(on?MAT.well:MAT.pipe):MAT.amber;el.mesh.visible=el.show&&LAYER.wells;}});});
+ const pts=wellPts.map(p=>V(p[0],4.2,p[1]));pts.push(pts[0].clone());const g=new THREE.BufferGeometry().setFromPoints(pts);const ln=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x4C7A58}));M.add(ln);
+ El(ln,{layer:'wells',name:'Dewatering header main',reveal:'S320',custom:(el,t)=>{const pr=P('S320',t);el.show=pr>0;g.setDrawRange(0,Math.max(2,Math.round(pts.length*pr)));el.mesh.visible=el.show&&LAYER.wells;}});PICK.pop();})();
+
+/* ------------------------------------------------------------ replacement, blinding, raft */
+const pitGeo=prismGeo(PIT), footGeo=prismGeo(FOOT);
+prismEl('sub','Replacement fill (1.0 m, structural fill)','S510',pitGeo,FM,1.0,{final:()=>MAT.replace,edges:false});
+prismEl('sub','Plain concrete 300 mm','B110',footGeo,PB,0.3,{final:()=>MAT.plain,edges:false});
+prismEl('sub','Waterproofing / protection membrane','B120',footGeo,RB,0.05,{final:()=>MAT.membrane,edges:false});
+(function(){const n=D.q.raftPours,tot=Math.abs(polyArea(FOOT));const xs=[0];
+ for(let k=1;k<n;k++){const target=tot*k/n;let lo=0,hi=71.3;for(let it=0;it<40;it++){const mid=(lo+hi)/2;const a=Math.abs(polyArea(clipX(FOOT,-1,mid)));if(a<target)lo=mid;else hi=mid;}xs.push((lo+hi)/2);}xs.push(71.3);
+ for(let k=0;k<n;k++){const poly=clipX(FOOT,xs[k]-(k?0:1),xs[k+1]+(k<n-1?0:1));const g=prismGeo(poly);const th=(k+1)/n,th0=k/n;
+  prismEl('sub','Raft pour '+(k+1)+' of '+n+' (1.2 m)','B230',g,RB,1.2,{final:()=>MAT.raft,pre:[{act:'B210',style:'rebar'},{act:'B220',style:'form'}],
+   prog:t=>clamp((P('B230',t)-th0)/(th-th0),0,1)});}})();
+
+/* ------------------------------------------------------------ walls (zone A / zone B, 3 lifts) */
+const HL=(WT-RT)/3;
+function liftEls(zone,layer,name,cx,cz,sx,sz,rotY){for(let l=1;l<=3;l++){const y0=RT+HL*(l-1),y1=RT+HL*l;
+ boxEl(layer,name+' – lift '+l,'W'+zone+l+'P',cx,cz,sx,sz,y0,y1,{rotY:rotY||0,pre:[{act:'W'+zone+l+'R',style:'rebar'},{act:'W'+zone+l+'F',style:'form'}]});}}
+// zone A: pump-bay block
+liftEls('A','walls','West wall (zone A)',0.5,0,1.0,65.9);
+liftEls('A','walls','North end wall (zone A)',8,-31.45,16,2.4);
+liftEls('A','walls','South end wall (zone A)',8,31.45,16,2.4);
+for(let j=0;j<20;j++) liftEls('A','walls','Pump-bay fin '+(j+1),5.5,-29.45+3.1*j,9.0,1.0);
+// zone B: wing walls, east block, channels, piers
+(function(){const wing=[[FOOT[1],FOOT[2]],[FOOT[5],FOOT[6]]];wing.forEach((e,idx)=>{const a=e[0],b=e[1];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const dx=(b[0]-a[0])/L,dz=(b[1]-a[1])/L;const nx=dz,nz=-dx;
+ const cx=(a[0]+b[0])/2-nx*.5,cz=(a[1]+b[1])/2-nz*.5;liftEls('B','walls','Wing wall '+(idx?'south':'north')+' (zone B)',cx,cz,L,1.0,-Math.atan2(dz,dx));
+ // counterforts CF
+ for(let k=0;k<6;k++){const s=3.0+5.4*k;const px=a[0]+dx*s,pz=a[1]+dz*s;const phi=-Math.atan2(nz*(idx?-1:1)*(idx?-1:1),nx);
+  for(let l=1;l<=3;l++){const yA=RT+HL*(l-1),yB=RT+HL*l,w=y=>3.0*(1-(y-RT)/11.9);
+   const sh=new THREE.Shape([new THREE.Vector2(0,yA),new THREE.Vector2(w(yA),yA),new THREE.Vector2(w(yB),yB),new THREE.Vector2(0,yB)]);
+   const g=new THREE.ExtrudeGeometry(sh,{depth:1,bevelEnabled:false});g.translate(0,0,-.5);
+   const m=new THREE.Mesh(g,MAT.concrete);m.position.set(px,0,pz);
+   // outward direction of this wing wall (away from the building)
+   const ox=idx?-nx:nx, oz=idx?-nz:nz; // n computed for the edge direction; for south edge direction is reversed
+   const outx=nx,outz=nz; m.rotation.y=-Math.atan2(outz,outx);
+   edgeIt(m,new THREE.EdgesGeometry(g));
+   El(m,{layer:'walls',name:'Counterfort CF-'+(idx*6+k+1)+' – lift '+l,reveal:'WB'+l+'P',base:'none',pre:[{act:'WB'+l+'R',style:'rebar'},{act:'WB'+l+'F',style:'form'}],
+    custom:(el,t)=>{const pr=P('WB'+l+'P',t);if(pr>=1){el.show=true;el.mesh.material=MAT.concrete;}else if(pr>0){el.show=true;el.mesh.material=MAT.wet;}else{el.show=false;}preApply(el,t,pr);el.mesh.visible=el.show&&LAYER.walls;}});}}
+ });})();
+liftEls('B','walls','East block north wall',58.35,-20.125,25.9,1.0);
+liftEls('B','walls','East block south wall',58.35,20.125,25.9,1.0);
+liftEls('B','walls','East wall (sluice gates)',70.8,0,1.0,41.25);
+(function(){const cw=(41.25-2-5)/6;for(let k=0;k<5;k++){const z=-20.625+1.0+cw*(k+1)+k*1.0+0.5;liftEls('B','walls','Screen channel wall '+(k+1),59.15,z,22.3,1.0);}})();
+(function(){const shp=new THREE.Shape();shp.moveTo(-1.5,-.5);shp.lineTo(1.5,-.5);shp.absarc(1.5,0,.5,-Math.PI/2,Math.PI/2,false);shp.lineTo(-1.5,.5);shp.absarc(-1.5,0,.5,Math.PI/2,Math.PI*1.5,false);
+ const g=new THREE.ExtrudeGeometry(shp,{depth:1,bevelEnabled:false});g.rotateX(-Math.PI/2);
+ const cols=[[19,[3.1,9.3,16.0,22.7]],[30.5,[3.1,9.3,16.0,22.7]]];let id=0;
+ cols.forEach(c=>c[1].forEach(zz=>[zz,-zz].forEach(z=>{id++;for(let l=1;l<=3;l++){const y0=RT+HL*(l-1);const m=new THREE.Mesh(g,MAT.concrete);m.position.set(c[0],y0,z);m.scale.set(1,HL,1);edgeIt(m,new THREE.EdgesGeometry(g));
+  El(m,{layer:'walls',name:'Obround pier '+id+' – lift '+l,reveal:'WB'+l+'P',y0,h:HL,base:'bottom',pre:[{act:'WB'+l+'R',style:'rebar'},{act:'WB'+l+'F',style:'form'}]});}})));})();
+
+/* ------------------------------------------------------------ top slab + falsework (drawing 32: continuous slab over the whole footprint) */
+function inPoly(p,x,z){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){if(((p[i][1]>z)!==(p[j][1]>z))&&(x<(p[j][0]-p[i][0])*(z-p[i][1])/(p[j][1]-p[i][1])+p[i][0]))c=!c;}return c;}
+(function(){const holes=[];const cw=(41.25-2-5)/6;
+ for(let k=0;k<6;k++){const zc=-20.625+1.0+cw/2+k*(cw+1.0);holes.push(rectPoly(52.0,zc-2.4,56.6,zc+2.4));holes.push(rectPoly(51.0,zc-2.7,51.7,zc+2.7));holes.push(rectPoly(58.2,zc-2.7,58.9,zc+2.7));}
+ const west=clipX(FOOT,-0.01,16), wing=clipX(FOOT,16,45.4), east=clipX(FOOT,45.4,71.31);
+ const pre=[{act:'B420',style:'rebar'},{act:'B410',style:'form'}];
+ prismEl('slab','Top slab – pump block (EL +3.0 to +4.0, 1.0 m)','B430',prismGeo(west),WT,1.0,{final:()=>MAT.slabMat,pre});
+ prismEl('slab','Top slab – wing region (EL +3.7 to +4.0, 0.30 m, drawing 67 / 32-A)','B430',prismGeo(wing),3.7,0.3,{final:()=>MAT.slabMat,pre});
+ prismEl('slab','Top slab – screen block, openings for 6 screens + 12 stop-log slots','B430',prismGeo(east,holes),WT,1.0,{final:()=>MAT.slabMat,pre});
+ const pts=[],st=2;
+ for(let x=1;x<=70;x+=st)for(let z=-32;z<=32;z+=st){if(!inPoly(FOOT,x,z))continue;pts.push(V(x,RT,z),V(x,WT,z));
+  if(inPoly(FOOT,x+st,z))[WT-.05,-2.6].forEach(y=>pts.push(V(x,y,z),V(x+st,y,z)));
+  if(inPoly(FOOT,x,z+st))[WT-.05,-2.6].forEach(y=>pts.push(V(x,y,z),V(x,y,z+st)));}
+ const ln=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x7D9AB7,transparent:true,opacity:.5}));M.add(ln);
+ El(ln,{layer:'slab',name:'Heavy falsework (about 12 m) under the top slab',reveal:'B410',custom:(el,t)=>{const a=BY['B410'],b=BY['B510'];el.show=!!a&&t>=a.s&&t<=b.f;el.mesh.visible=el.show&&LAYER.slab;}});PICK.pop();})();
+prismEl('slab','Floor slab on structural fill (EL +3.5 to +4.0)','B430',prismGeo(rectPoly(-8.0,-34.5,0,34.5)),3.5,0.5,{final:()=>MAT.slabMat,pre:[{act:'B420',style:'rebar'},{act:'B410',style:'form'}]});
+// structural backfill ring
+prismEl('backfill','Structural backfill (between D-wall and structure)','B520',prismGeo(PIT,[FOOT]),RT,GLV-RT,{final:()=>MAT.backfill,edges:false});
+
+/* ------------------------------------------------------------ frame: columns, beams, roof slab (drawings 34, 35, 36, 37, 51) */
+const STG=[{n:1,y0:ST,y1:10.9,f:'P110',r:'P120',p:'P130'},{n:2,y0:10.9,y1:13.43,f:'P210',r:'P220',p:'P230'},{n:3,y0:13.43,y1:17.3,f:'P310',r:'P320',p:'P330'}];
+const preS=s=>[{act:s.r,style:'rebar'},{act:s.f,style:'form'}];
+(function(){const axes=[XA,XC],nz=ZP.length,s1=STG[0],s2=STG[1],s3=STG[2];
+ STG.forEach(s=>{ZP.forEach((z,i)=>{axes.forEach(x=>{const c1=(i===0||i===nz-1);boxEl('frame',(c1?'C1':'C2')+' column – stage '+s.n,s.p,x,z,c1?0.7:1.0,0.5,s.y0,s.y1,{pre:preS(s)});});
+  if(i===0||i===nz-1) boxEl('frame','C1 column (axis B) – stage '+s.n,s.p,XB,z,0.7,0.5,s.y0,s.y1,{pre:preS(s)});});});
+ const bz=i=>[(ZP[i]+ZP[i+1])/2,ZP[i+1]-ZP[i]-0.5];       // centre and clear length between column faces of bay i
+ // ---- stage 1 (drawing 35): axis A = wall 400x2700 (EL +4.0 to +6.7); axis C = B3/B4 400x800 (+5.9 to +6.7); end bay 1-2 = B7 400x900 (+10.0 to +10.9)
+ for(let i=0;i<nz-1;i++){const c=bz(i);
+  if(i===0){[XA+.075,XC-.075].forEach(x=>boxEl('frame','Beam B7 400x900 (EL +10.90), bay 1-2',s1.p,x,c[0],0.4,c[1],10.0,10.9,{pre:preS(s1)}));}
+  else{boxEl('frame','Wall 400x2700 on axis A (EL +4.0 to +6.7)',s1.p,XA+.075,c[0],0.4,c[1],ST,6.7,{pre:preS(s1)});
+   boxEl('frame','Beam B3/B4 400x800 on axis C (EL +6.70)',s1.p,XC-.075,c[0],0.4,c[1],5.9,6.7,{pre:preS(s1)});}}
+ boxEl('frame','Beam B4 400x800 axis 1, A-B (EL +6.70)',s1.p,(XA+XB)/2,ZP[0]-.075,XB-XA-0.7,0.4,5.9,6.7,{pre:preS(s1)});
+ boxEl('frame','Beam B4 400x800 axis 1, B-C (EL +6.70)',s1.p,(XB+XC)/2,ZP[0]-.075,XC-XB-0.7,0.4,5.9,6.7,{pre:preS(s1)});
+ boxEl('frame','Beam B4 400x800 axis 12, A-B (EL +6.70)',s1.p,(XA+XB)/2,ZP[nz-1]+.075,XB-XA-0.7,0.4,5.9,6.7,{pre:preS(s1)});
+ boxEl('frame','Beam B7 400x900 axis 12, B-C (EL +10.90)',s1.p,(XB+XC)/2,ZP[nz-1]+.075,XC-XB-0.7,0.4,10.0,10.9,{pre:preS(s1)});
+ // ---- stage 2 (drawing 36): crane runway = two B4 400x800 per side at EL +13.43 tied by CA 500x800 at the columns; end beams at axes 1 and 12
+ for(let i=0;i<nz-1;i++){const c=bz(i);
+  boxEl('frame','Crane runway beam B4 400x800 (outer, EL +13.43), axis A',s2.p,XA-.1,c[0],0.4,c[1],12.63,13.43,{pre:preS(s2)});
+  boxEl('frame','Crane runway beam B4 400x800 (inner, EL +13.43), axis A',s2.p,XA+.9,c[0],0.4,c[1],12.63,13.43,{pre:preS(s2)});
+  boxEl('frame','Crane runway beam B4 400x800 (outer, EL +13.43), axis C',s2.p,XC+.1,c[0],0.4,c[1],12.63,13.43,{pre:preS(s2)});
+  boxEl('frame','Crane runway beam B4 400x800 (inner, EL +13.43), axis C',s2.p,XC-.9,c[0],0.4,c[1],12.63,13.43,{pre:preS(s2)});}
+ for(let i=1;i<nz-1;i++){boxEl('frame','Bracket beam CA 500x800 at the column, axis A',s2.p,XA+.4,ZP[i],1.2,0.5,12.63,13.43,{pre:preS(s2)});boxEl('frame','Bracket beam CA 500x800 at the column, axis C',s2.p,XC-.4,ZP[i],1.2,0.5,12.63,13.43,{pre:preS(s2)});}
+ [ZP[0]+.2,ZP[nz-1]-.2].forEach(z=>{boxEl('frame','End beam B4 400x800 (EL +13.43), A-B',s2.p,(XA+XB)/2,z,XB-XA-0.7,0.4,12.63,13.43,{pre:preS(s2)});boxEl('frame','End beam B4 400x800 (EL +13.43), B-C',s2.p,(XB+XC)/2,z,XC-XB-0.7,0.4,12.63,13.43,{pre:preS(s2)});});
+ // ---- stage 3 (drawing 37): roof slab 200 mm on B5 500x1200 (every axis), B1/B2 300x700 (axes A, B, C)
+ ZP.forEach((z,i)=>{const e=(i===0?.2:(i===nz-1?-.2:0));boxEl('frame','Roof beam B5 500x1200 (axis '+(i+1)+')',s3.p,(XA+XC)/2,z+e,XC-XA-1.0,0.5,16.1,17.3,{pre:preS(s3)});});
+ for(let i=0;i<nz-1;i++){const c=bz(i),L=c[1]-.5;
+  boxEl('frame','Roof beam B1 300x700 (axis A)',s3.p,XA+.4,c[0],0.3,L,16.6,17.3,{pre:preS(s3)});boxEl('frame','Roof beam B1 300x700 (axis C)',s3.p,XC-.4,c[0],0.3,L,16.6,17.3,{pre:preS(s3)});
+  boxEl('frame','Roof beam B2 300x700 (axis B)',s3.p,XB,c[0],0.3,L,16.6,17.3,{pre:preS(s3)});}
+ boxEl('frame','Roof slab 200 mm (EL +17.10 to +17.30)',s3.p,(XA+XC)/2,0,XC-XA+1.0,69.9,17.1,17.3,{pre:preS(s3)});
+ // roof hatch upstands 1000x1000 clear, 450 high, 200 thick (drawing 37, near axes 1 and 12 at axis A)
+ [ZP[0]+1.05,ZP[nz-1]-1.05].forEach(z=>{const x=XA+.85;[[0,-.6,1.4,.2],[0,.6,1.4,.2],[-.6,0,.2,1.0],[.6,0,.2,1.0]].forEach(k=>boxEl('frame','Roof hatch upstand 200 mm, 450 high',s3.p,x+k[0],z+k[1],k[2],k[3],17.3,17.75,{pre:preS(s3)}));});})();
+
+/* ------------------------------------------------------------ blockwork, plaster, paint, openings, roof build-up */
+const bayZ=[];for(let i=0;i<ZP.length-1;i++)bayZ.push({z:(ZP[i]+ZP[i+1])/2,w:ZP[i+1]-ZP[i]-0.5});
+function cvs(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
+function noise(x,w,h,n,a,col){for(let i=0;i<n;i++){x.fillStyle=col(Math.random());x.globalAlpha=a*Math.random();x.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2.5,1+Math.random()*2.5);}x.globalAlpha=1;}
+const TEXSRC={};
+TEXSRC.plaster=(function(){const c=cvs(256,256),x=c.getContext('2d');x.fillStyle='#bfb8aa';x.fillRect(0,0,256,256);noise(x,256,256,3000,.4,v=>v>.5?'#8f887b':'#d9d3c6');
+ x.strokeStyle='rgba(110,102,90,.10)';x.lineWidth=2;for(let i=0;i<12;i++){x.beginPath();x.moveTo(Math.random()*256,Math.random()*256);x.lineTo(Math.random()*256,Math.random()*256);x.stroke();}return c;})();
+TEXSRC.screed=(function(){const c=cvs(256,256),x=c.getContext('2d');x.fillStyle='#9a9c9d';x.fillRect(0,0,256,256);noise(x,256,256,2600,.4,v=>v>.5?'#76787a':'#bcbebf');return c;})();
+TEXSRC.membrane=(function(){const c=cvs(256,256),x=c.getContext('2d');x.fillStyle='#1f2326';x.fillRect(0,0,256,256);x.strokeStyle='#3b4247';x.lineWidth=2;for(let i=0;i<=256;i+=64){x.beginPath();x.moveTo(i,0);x.lineTo(i,256);x.stroke();}noise(x,256,256,500,.2,v=>'#444');return c;})();
+TEXSRC.insul=(function(){const c=cvs(256,256),x=c.getContext('2d');x.fillStyle='#c9bd8a';x.fillRect(0,0,256,256);x.strokeStyle='#8d8458';x.lineWidth=3;for(let i=0;i<=256;i+=128){x.beginPath();x.moveTo(i,0);x.lineTo(i,256);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(256,i);x.stroke();}noise(x,256,256,600,.2,v=>v>.5?'#a89d6d':'#ddd2a0');return c;})();
+TEXSRC.tiles=(function(){const c=cvs(256,256),x=c.getContext('2d');x.fillStyle='#6f6a62';x.fillRect(0,0,256,256);const cols=['#a8a094','#9c9488','#b2aa9d','#948c80','#a59d90'];for(let i=0;i<16;i++)for(let j=0;j<16;j++){x.fillStyle=cols[(i*7+j*3+((i*j)%3))%5];x.fillRect(i*16+1,j*16+1,14,14);}return c;})();
+const texCache={},matCache={};
+function tex(name,rx,ry){const k=name+'|'+rx.toFixed(2)+'|'+ry.toFixed(2);if(texCache[k])return texCache[k];const t=new THREE.CanvasTexture(TEXSRC[name]);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(Math.max(rx,.05),Math.max(ry,.05));t.anisotropy=4;return texCache[k]=t;}
+function tmat(name,rx,ry){const k=name+'|'+rx.toFixed(1)+'|'+ry.toFixed(1);if(matCache[k])return matCache[k];return matCache[k]=new THREE.MeshLambertMaterial({map:tex(name,rx,ry),side:THREE.DoubleSide});}
+const paintMats={};function pmat(c){return paintMats[c]||(paintMats[c]=new THREE.MeshLambertMaterial({color:c,side:THREE.DoubleSide}));}
+const COATo=[0xE6E2D8,0xD9CDB3,0xC4B28D], COATi=[0xEBE8E0,0xC5D0C9];
+const MORT=new THREE.MeshLambertMaterial({color:0x8A877F}), BLKM=new THREE.MeshLambertMaterial({color:0xFFFFFF});
+let blkSeed=1;function rnd(i){const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+const NRM={'+x':[1,0],'-x':[-1,0],'+z':[0,1],'-z':[0,-1]};
+/* one wall of hollow concrete blocks 400 x 200 x 250 (running bond, 10 mm joints), laid course by course; plaster and paint are thin skins applied on top */
+function masonryEl(name,act,cx,cz,sx,sz,y0,y1,o){const alongZ=sz>sx,L=alongZ?sz:sx,T=alongZ?sx:sz,H=y1-y0,BL=.4,BH=.2,J=.01,rows=Math.ceil(H/BH-1e-6),items=[],rowEnd=[];
+ for(let r=0;r<rows;r++){const off=(r%2)?BL/2:0;for(let a0=-L/2-off;a0<L/2-1e-6;a0+=BL){const lo=Math.max(a0,-L/2),hi=Math.min(a0+BL,L/2);if(hi-lo<.04)continue;items.push([(lo+hi)/2,hi-lo,r]);}rowEnd.push(items.length);}
+ const n=items.length,im=new THREE.InstancedMesh(UB,BLKM,n),d=new THREE.Object3D();
+ items.forEach((it,i)=>{const h=Math.min(BH,H-it[2]*BH),y=y0+it[2]*BH+h/2;d.position.set(alongZ?cx:cx+it[0],y,alongZ?cz+it[0]:cz);d.scale.set(alongZ?T:it[1]-J,h-J*.6,alongZ?it[1]-J:T);d.updateMatrix();im.setMatrixAt(i,d.matrix);
+  const v=.88+.24*rnd(blkSeed++),w=rnd(blkSeed*3+1)*.05;im.setColorAt(i,new THREE.Color(v*.70+w,v*.69+w,v*.65));});
+ im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;im.count=0;im.frustumCulled=false;M.add(im);im.userData.on=false;im.visible=false;
+ const core=new THREE.Mesh(UB,MORT);core.scale.set(alongZ?T-.05:L,H,alongZ?L:T-.05);core.position.set(cx,y0+H/2,cz);
+ const nm=NRM[o.out],tPl=.012,sk=[];
+ const mkSlab=(sign,mat)=>{const m=new THREE.Mesh(UB,mat);m.scale.set(alongZ?tPl:L,.01,alongZ?L:tPl);m.userData.sign=sign;m.userData.off=T/2+(sign>0?.006:.006);M.add(m);m.userData.on=false;m.visible=false;return m;};
+ const base=[mkSlab(1),mkSlab(-1)],top=[mkSlab(1),mkSlab(-1)];top.forEach(m=>{m.scale.x*=alongZ?1.2:1;m.scale.z*=alongZ?1:1.2;});
+ const place=(m,fr,sign)=>{const k=m.userData.sign*sign,hh=Math.max(H*fr,.001);m.scale.y=hh;m.position.set(cx+nm[0]*k*(T/2+.006+(m.userData.top?.004:0)),y0+hh/2,cz+nm[1]*k*(T/2+.006+(m.userData.top?.004:0)));};
+ top.forEach(m=>m.userData.top=true);
+ const sq=o.seq||0,stg=(p,s)=>clamp((p-s*.72)/.28,0,1);
+ const platMat=tmat('plaster',L/1.6,3);
+ const el=El(core,{layer:'cmu',name,reveal:act,y0,h:H,base:'center',custom:(e,t)=>{
+  const pr=o.prog?o.prog(t):P(act,t),cnt=Math.floor(pr*n);im.count=cnt;e.show=pr>0;
+  let top0=0;if(cnt>0){let r=0;while(r<rows-1&&rowEnd[r]<cnt)r++;const prev=r?rowEnd[r-1]:0,fr=(cnt-prev)/(rowEnd[r]-prev);top0=Math.min(H,(r+Math.min(1,fr))*BH);}if(pr>=1)top0=H;
+  core.scale.y=Math.max(top0,.001);core.position.y=y0+Math.max(top0,.001)/2;
+  const on=pr>0;im.userData.on=on;im.visible=on&&LAYER.cmu;
+  // faces: [exterior, interior]
+  const faces=[{sign:1,pl:stg(P('AR210',t),sq),coats:3,pc:P('AR330',t),col:COATo},{sign:-1,pl:stg(P('AR220',t),sq),coats:2,pc:P('AR320',t),col:COATi}];
+  faces.forEach((F,k)=>{const b=base[k],tp=top[k];let c=0;for(let q=0;q<F.coats;q++){if(clamp((F.pc*F.coats-q-sq*.72)/.28,0,1)>=1)c++;else break;}
+   const part=c<F.coats?clamp((F.pc*F.coats-c-sq*.72)/.28,0,1):0;
+   const bo=F.pl>0&&pr>=1;b.userData.on=bo;b.visible=bo&&LAYER.cmu;if(bo){place(b,F.pl,F.sign);b.material=c===0?platMat:pmat(F.col[c-1]);}
+   const to=bo&&part>0&&F.pl>=1;tp.userData.on=to;tp.visible=to&&LAYER.cmu;if(to){place(tp,part,F.sign);tp.material=pmat(F.col[c]);}});
+ }});
+ el.auxList=[im].concat(base,top);return el;}
+const cmuBox=(name,act,x,z,sx,sz,y0,y1,o)=>masonryEl(name,act,x,z,sx,sz,y0,y1,o);
+
+(function(){const nb=bayZ.length;let idx=0;const total=nb*2+4;
+ const prog=(i)=>t=>clamp(P('AR110',t)*total-i,0,1);
+ [XA,XC].forEach((x,sd)=>bayZ.forEach((b,k)=>{const door=(k===0);const i=idx++;const out=sd?'+x':'-x',sq=i/total;
+  if(!door) cmuBox('Blockwork 250 mm (BOQ 2.2.2.1)','AR110',x,b.z,0.25,b.w,ST,17.3,{prog:prog(i),out,seq:sq});
+  else{cmuBox('Blockwork above roll-up door','AR110',x,b.z,0.25,b.w,9.0,17.3,{prog:prog(i),out,seq:sq});
+   [-1,1].forEach(s=>cmuBox('Blockwork beside roll-up door','AR110',x,b.z+s*(b.w/2-0.3),0.25,0.6,ST,9.0,{prog:prog(i),out,seq:sq}));
+   boxEl('finish','Roll-up door 5x5 m (BOQ 2.2.2.18)','AR170',x,b.z,0.18,5.0,ST,9.0,{y0:ST,h:5,final:()=>MAT.rollup});}
+  boxEl('finish','Aluminium windows (BOQ 2.2.2.19)','AR150',x+(sd?0.1:-0.1),b.z,0.12,b.w-1.2,11.6,14.2,{prog:t=>clamp(P('AR150',t)*nb*2-(sd*nb+k),0,1),y0:11.6,h:2.6,final:()=>MAT.glass,edges:false});
+  boxEl('finish','Decorative aluminium louvres (BOQ 2.2.2.3)','AR130',x+(sd?0.62:-0.62),b.z,0.08,b.w-0.4,14.4,17.0,{prog:t=>clamp(P('AR130',t)*nb*2-(sd*nb+k),0,1),y0:14.4,h:2.6,final:()=>MAT.louvre,edges:false});}));
+ [-1,1].forEach((s,e)=>{const z=s*34.475;const w=XC-XA-0.5,out=s<0?'-z':'+z',sq=(nb*2+e*2)/total;
+  if(e===1){cmuBox('Blockwork end wall (door bay)','AR110',(XA+XC)/2,z,w,0.25,9.0,17.3,{prog:prog(nb*2+e*2),out,seq:sq});
+   [-1,1].forEach(q=>cmuBox('Blockwork end wall','AR110',(XA+XC)/2+q*(w/2-(w-5)/4),z,(w-5)/2,0.25,ST,9.0,{prog:prog(nb*2+e*2+1),out,seq:sq}));
+   boxEl('finish','Roll-up door 5x5 m (BOQ 2.2.2.18)','AR170',(XA+XC)/2,z,5.0,0.18,ST,9.0,{y0:ST,h:5,final:()=>MAT.rollup});}
+  else cmuBox('Blockwork end wall','AR110',(XA+XC)/2,z,w,0.25,ST,17.3,{prog:prog(nb*2+e*2),out,seq:sq});
+  boxEl('finish','Green wall system (BOQ 2.2.2.4)','AR140',(XA+XC)/2,z+s*0.2,w-1,0.1,ST+1,10.5,{y0:ST+1,h:5.5,final:()=>MAT.green,edges:false});});
+ [[XA+3,-34.475,'z'],[XC-3,-34.475,'z'],[XA+3,34.475,'z'],[XC-3,34.475,'z'],[XA,-9,'x'],[XA,12,'x'],[XC,2,'x']].forEach((d,i)=>{
+  const m=d[2]==='z'?[0.9,0.35]:[0.35,0.9];boxEl('finish','Steel door 900x2150 (BOQ 2.2.2.17)','AR160',d[0],d[1],m[0],m[1],ST,ST+2.15,{prog:t=>clamp(P('AR160',t)*7-i,0,1),y0:ST,h:2.15,final:()=>MAT.door,edges:false});});
+ /* parapet (blockwork 150 mm) and roof build-up: screed -> membrane -> insulation -> mosaic tiles */
+ const hx=(XA+XC)/2,hw=XC-XA+1.0,hl=69.9;
+ cmuBox('Parapet blockwork 150 mm (BOQ 2.2.2.2)','AR120',hx,-hl/2,hw,.15,17.3,18.6,{out:'-z',seq:.2});cmuBox('Parapet blockwork 150 mm (BOQ 2.2.2.2)','AR120',hx,hl/2,hw,.15,17.3,18.6,{out:'+z',seq:.4});
+ cmuBox('Parapet blockwork 150 mm (BOQ 2.2.2.2)','AR120',hx-hw/2,0,.15,hl,17.3,18.6,{out:'-x',seq:.6});cmuBox('Parapet blockwork 150 mm (BOQ 2.2.2.2)','AR120',hx+hw/2,0,.15,hl,17.3,18.6,{out:'+x',seq:.8});
+ [['AR510','Roof slope screed (light concrete)',17.3,0.12,'screed',1.4],['AR520','Roof waterproofing membrane',17.42,0.03,'membrane',1.4],['AR530','Roof thermal insulation boards',17.45,0.06,'insul',1.4],['AR540','Roof mosaic tiles',17.51,0.04,'tiles',2.0]].forEach(r=>{
+  const mt=tmat(r[4],(hw-.4)/r[5],(hl-.4)/r[5]);const m=new THREE.Mesh(UB,mt);m.scale.set(hw-.4,r[3],hl-.4);m.position.set(hx,r[2]+r[3]/2,0);
+  El(m,{layer:'finish',name:r[1]+' (BOQ 2.2.2)',reveal:r[0],axis:'z',z0:-(hl-.4)/2,len:hl-.4,final:()=>mt,custom:null});});
+ const fl=new THREE.Mesh(UB,MAT.epoxy);fl.scale.set(14.2,.03,68.5);fl.position.set(hx,ST+.02,0);
+ El(fl,{layer:'finish',name:'Epoxy floor system (BOQ 2.2.2.11-12)',reveal:'AR420',custom:(el,t)=>{const pr=P('AR420',t);el.show=pr>0;el.mesh.material=pr>=1?MAT.epoxy:MAT.amber;el.mesh.visible=el.show&&LAYER.finish;}});
+
+ /* ---- roof items taken from the drawings: access hatches with steel lids (drawing 37), roof drains; caged ladder to each hatch (section 67) */
+ const RY=17.56,gE=(name,act,prog,build)=>gEl('mep',name,act,prog,build),nzz=ZP.length,HZ=[ZP[0]+1.05,ZP[nzz-1]-1.05],HX=XA+.85;
+ HZ.forEach((z,i)=>gE('Roof access hatch '+(i+1)+' – steel lid on the concrete upstand (drawing 37)','AR540',t=>P('AR540',t)>=.5?1:0,g=>{const b=PBLD();
+  b.rbox(1.38,.05,1.38,HX,RY+.2+.02,z,0x6F767C,0,0,0,.02).box(.3,.04,.04,HX+.45,RY+.26,z,0x2A2F33).cyl(.03,.12,HX-.62,RY+.12,z-.62,0x2A2F33).cyl(.03,.12,HX-.62,RY+.12,z+.62,0x2A2F33);g.add(b.build());}));
+ const drains=[];[-30,-15,0,15,30].forEach(z=>{drains.push([XA+.9,z]);drains.push([XC-.9,z]);});
+ gE('Roof drains (BOQ 2.2.4.13-15)','AR550',t=>P('AR550',t),g=>{const b=PBLD();drains.forEach(d=>{b.cyl(.2,.05,d[0],RY+.025,d[1],0x2C3135).cyl(.13,.06,d[0],RY+.05,d[1],0x14181B);});g.add(b.build());});
+ gE('Caged ladders: EL +4.0 to roof hatches (drawing 67)','P330',t=>P('P330',t)>=.5?1:0,g=>{const b=PBLD();HZ.forEach(z=>{[[4.2,10.0],[10.0,13.5],[13.5,17.3]].forEach((s,k)=>{const y0=s[0],y1=s[1],xo=HX+(k%2?.05:0);[-.2,.2].forEach(q=>b.box(.05,y1-y0,.05,xo,(y0+y1)/2,z+q,0x6D767D));for(let y=y0+.3;y<y1;y+=.3)b.box(.05,.035,.4,xo,y,z,0x6D767D);for(let y=y0+2.2;y<y1;y+=.9)b.cyl(.34,.025,xo,y,z,0x7D858B);});});g.add(b.build());});
+})();
+
+/* ------------------------------------------------------------ mechanical devices (drawings 66, 67, 39, 40, M0-7310/7311/7312) */
+Object.assign(MAT,{slog:mk(0xB19673),louv:mk(0xFFFFFF)});
+const louvTex=(function(){const c=document.createElement('canvas');c.width=64;c.height=64;const x=c.getContext('2d');x.fillStyle='#2f383f';x.fillRect(0,0,64,64);for(let i=0;i<8;i++){x.fillStyle='#b4c2cd';x.fillRect(0,i*8+1,64,4);}return new THREE.CanvasTexture(c);})();
+MAT.louv=mk(0xFFFFFF,{map:louvTex});
+function mkScreenTex(){const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d');x.clearRect(0,0,128,128);x.strokeStyle='#d7dde1';x.lineWidth=3;for(let i=0;i<=128;i+=16){x.beginPath();x.moveTo(i,0);x.lineTo(i,128);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(128,i);x.stroke();}
+ x.fillStyle='#4d5a64';x.fillRect(0,0,128,10);x.fillRect(0,118,128,10);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(7,5);return t;}
+const TEXF=mkScreenTex(), TEXB=mkScreenTex();
+const SCRM=[mk(0xFFFFFF,{map:TEXF,transparent:true,alphaTest:.25}),mk(0xFFFFFF,{map:TEXB,transparent:true,alphaTest:.25})];
+const PX=2.3, PZ=[];for(let i=0;i<19;i++)PZ.push(-27.9+3.1*i);
+const SEG=[{b:-7.75,t:-5.25},{b:-5.25,t:-2.25},{b:-2.25,t:.75},{b:.75,t:5.45}], MOT={b:5.45,t:8.35};
+const LXS=[4.6,5.6,6.6,7.6], LXM=8.5, HOVER=5.6, HOOKREST=8.6;   // laydown x of the 4 sections and the motor (between pump axis and axis C)
+const STEEL=0x8C99A3, FLG=0x4A5560, BLUE=0x627E9B, DBLUE=0x4D6279;
+function pumpSegMesh(k){const s=SEG[k],cy=(s.b+s.t)/2,h=s.t-s.b,b=PBLD(),Y=y=>y-cy;
+ if(k===0){b.cone(.98,1.0,0,Y(-7.25),0,DBLUE).cyl(.62,1.5,0,Y(-6.0),0,BLUE).cyl(.8,.14,0,Y(-5.32),0,FLG).cyl(.2,.5,0,Y(-7.6),0,K.dark);for(let a=0;a<6;a++)b.cyl(.06,.08,Math.cos(a*1.047)*.7,Y(-5.25),Math.sin(a*1.047)*.7,K.dark);for(let a=0;a<4;a++)b.box(.08,.9,.5,Math.cos(a*1.57)*.62,Y(-6.6),Math.sin(a*1.57)*.62,DBLUE);}
+ else if(k<3){b.cyl(.42,h,0,0,0,STEEL).cyl(.58,.14,0,-h/2+.07,0,FLG).cyl(.58,.14,0,h/2-.07,0,FLG);for(let a=0;a<8;a++){const x=Math.cos(a*.785)*.5,z=Math.sin(a*.785)*.5;b.cyl(.05,.3,x,-h/2+.07,z,K.dark).cyl(.05,.3,x,h/2-.07,z,K.dark);}b.cyl(.46,.1,0,0,0,FLG);}
+ else{b.cyl(.42,3.25,0,Y(2.375),0,STEEL).cyl(.58,.14,0,Y(.82),0,FLG).rbox(2.1,.25,2.1,0,Y(4.125),0,0x6C7782,0,0,0,.05);
+  for(const[ax,az]of[[-.85,-.85],[.85,-.85],[-.85,.85],[.85,.85]])b.cyl(.07,.35,ax,Y(4.3),az,K.dark);
+  b.cyl(.82,1.2,0,Y(4.85),0,BLUE).cylx(.62,1.5,-.95,Y(4.9),0,BLUE).cylx(.84,.14,-1.7,Y(4.9),0,FLG);
+  for(let a=0;a<12;a++)b.cylx(.06,.2,-1.76,Y(4.9)+Math.sin(a*.5236)*.74,Math.cos(a*.5236)*.74,K.dark);
+  b.cyl(.88,.14,0,Y(5.38),0,FLG).cyl(.55,.9,0,Y(5.0),0,0x1D4670).box(.5,.4,.4,.8,Y(5.0),0,K.dark);}
+ return b.build();}
+function pumpMotorMesh(){const cy=(MOT.b+MOT.t)/2,b=PBLD(),Y=y=>y-cy;b.cyl(.72,2.4,0,Y(6.65),0,0x6A829E);for(let i=0;i<8;i++)b.cyl(.77,.06,0,Y(5.75+i*.27),0,0x7F95AE);
+ b.cone(.74,.55,0,Y(8.1),0,0x5E7594).cyl(.12,.15,0,Y(8.4),0,K.dark).box(.55,.5,.45,.88,Y(7.2),0,K.dark).box(.3,.3,.3,-.9,Y(6.4),0,K.grey).cyl(.76,.08,0,Y(5.55),0,K.dark);
+ for(let a=0;a<6;a++)b.box(.05,.05,.5,Math.cos(a*1.047)*.6,Y(7.9),Math.sin(a*1.047)*.6,K.steel);return b.build();}
+function pumpPipeMesh(){const b=PBLD(),Y=4.9,fl2=(x,r)=>b.cylx(r||.9,.12,x,Y,0,FLG);
+ b.cylx(.78,1.5,-2.55,Y,0,0x60707E);fl2(-1.8);fl2(-3.3);b.cyl(.55,.6,-2.3,Y+.9,0,0x60707E).cyl(.22,.15,-2.3,Y+1.28,0,FLG).box(.08,.9,.08,-2.0,Y+.4,.8,K.dark,0,0,.5).cyl(.14,.3,-1.55,Y+.2,.8,K.dark);
+ b.cylx(.76,.56,-3.7,Y,0,0x9F6F69);fl2(-3.42,.88);fl2(-3.98,.88);b.cyl(.2,.9,-3.7,Y+.9,0,K.dark).rbox(.6,.5,.6,-3.7,Y+1.55,0,0x2F3A42,0,0,0,.2).cyl(.45,.05,-3.7,Y+1.95,0,0x2B7A3B).cyl(.06,.5,-3.7,Y+1.75,0,K.dark);
+ b.cylx(.68,1.3,-4.7,Y,0,STEEL);fl2(-4.05,.9);fl2(-5.35,.9);for(let a=0;a<8;a++)b.cylx(.045,1.35,-4.7,Y+Math.cos(a*.785)*.8,Math.sin(a*.785)*.8,K.dark);
+ b.cylx(.56,5.0,-8.0,Y,0,STEEL);for(const x of[-5.9,-7.4,-8.9])b.cylx(.62,.1,x,Y,0,0x6C7782);
+ [-3.0,-6.4,-9.4].forEach(x=>{b.rbox(.7,.5,1.4,x,Y-.82,0,0x6B747C,0,0,0,.1);b.box(.1,.9,1.4,x,Y-1.2,0,K.dark);});
+ b.cylx(.56,2.2,-10.6,Y,0,STEEL).cyl(.56,5.5,-11.7,Y-2.75,0,STEEL).cyl(.64,.1,-11.7,Y-2.6,0,0x6C7782);return b.build();}
+
+/* ---- installation schedule of the 19 pumps: 4 shaft/column lifts, motor, discharge piping (overhead crane does every lift) */
+const pumpClock=t=>{const P_=P('EQ130',t),i=clamp(Math.floor(P_*19),0,18),q=P_>=1?1:clamp(P_*19-i,0,1);return{P:P_,i,q};};
+function cyc(u,lx,h,bF,lying){ // pose of one lifted item: x offset, bottom y, rotation (lying->upright), hook x/y
+ const restB=lying?4.0:4.0, restHook=lying?6.1:4.0+h+1.6, hoverHook=HOVER+h+1.6;let x=lx,bot=restB,rot=lying?Math.PI/2:0,hx=lx,hy=HOOKREST;
+ if(u<.1){hy=lerp(HOOKREST,restHook,smooth(u/.1));}
+ else if(u<.35){const v=smooth((u-.1)/.25);bot=lerp(restB,HOVER,v);rot=(1-v)*(lying?Math.PI/2:0);hy=lerp(restHook,hoverHook,v);}
+ else if(u<.55){const v=smooth((u-.35)/.2);x=lerp(lx,PX,v);bot=HOVER;rot=0;hx=x;hy=hoverHook;}
+ else if(u<.9){const v=smooth((u-.55)/.35);x=PX;bot=lerp(HOVER,bF,v);rot=0;hx=PX;hy=bot+h+1.6;}
+ else{const v=smooth((u-.9)/.1);x=PX;bot=bF;rot=0;hx=PX;hy=lerp(bF+h+1.6,HOOKREST,v);}
+ return{x,bot,rot,hx,hy,lift:u<.9};}
+function craneState(t){const c=pumpClock(t),ea=BY['EQ130'];
+ if(!ea||t<ea.s)return{zb:PZ[0],hx:LXS[0],hy:HOOKREST,carry:null};
+ const{i,q}=c;let carry=null,hx=LXS[0],hy=HOOKREST;
+ if(c.P>=1){return{zb:PZ[18],hx:LXS[0],hy:HOOKREST,carry:null};}
+ for(let k=0;k<4;k++){if(q>=k*.15&&q<(k+1)*.15){const u=(q-k*.15)/.15,s=SEG[k],cy=cyc(u,LXS[k],s.t-s.b,s.b,true);carry={i,k,pose:cy};hx=cy.hx;hy=cy.hy;}}
+ if(q>=.6&&q<.78){const u=(q-.6)/.18,cy=cyc(u,LXM,MOT.t-MOT.b,MOT.b,false);carry={i,k:'m',pose:cy};hx=cy.hx;hy=cy.hy;}
+ if(!carry){hx=q<.6?LXS[Math.min(3,Math.floor(q/.15)+1)]||LXS[3]:(q<.78?LXM:LXS[0]);hy=HOOKREST;}
+ const zb=q>.78&&i<18?lerp(PZ[i],PZ[i+1],smooth((q-.78)/.22)):PZ[i];
+ return{zb,hx,hy,carry};}
+(function(){
+ const geoSeg=[0,1,2,3].map(pumpSegMesh);
+ for(let j=0;j<19;j++){
+  const g=new THREE.Group();g.position.set(0,0,PZ[j]);
+  const segs=geoSeg.map((m0,k)=>{const m=new THREE.Mesh(m0.geometry,VC);const gg=grp(g,0,0,0);gg.add(m);return gg;});
+  const mg=grp(g,0,0,0);mg.add(pumpMotorMesh());const pg=grp(g,PX,0,0);pg.add(pumpPipeMesh());
+  const place=(gg,pose,k,h,cy)=>{ // pose of an item given by cyc()
+   gg.position.set(pose.x,pose.bot+h/2,0);gg.rotation.x=pose.rot;if(pose.rot>0){gg.position.y=lerp(4.5,pose.bot+h/2,1-pose.rot/(Math.PI/2));}};
+  const stage=(gg,k,lying,h,lx)=>{gg.position.set(lx,4.0+(lying?.55:h/2),0);gg.rotation.x=lying?Math.PI/2:0;};
+  El(g,{layer:'equip',name:'Vertical turbine pump P-'+(j+1)+' – installed with the overhead crane (4 lifts, motor, DN1000 piping)',reveal:'EQ130',custom:(el,t)=>{
+   const crane=BY['EQ110'],cs=pumpClock(t),ea=BY['EQ130'];const craneDone=crane&&t>=crane.f;
+   let vis=false;const done=cs.P>=1||j<cs.i, cur=!done&&j===cs.i&&ea&&t>=ea.s, staged=!done&&craneDone&&(j===cs.i||(j===cs.i+1&&cs.q>.45));
+   const fin=el.mesh;
+   if(done){vis=true;SEG.forEach((s,k)=>{segs[k].position.set(PX,(s.b+s.t)/2,0);segs[k].rotation.x=0;segs[k].visible=true;});mg.position.set(PX,(MOT.b+MOT.t)/2,0);mg.rotation.x=0;mg.visible=true;pg.scale.x=1;pg.visible=true;}
+   else if(staged||cur){vis=true;const q=cur?cs.q:0;
+    SEG.forEach((s,k)=>{const h=s.t-s.b,gg=segs[k];if(q>=(k+1)*.15){gg.position.set(PX,(s.b+s.t)/2,0);gg.rotation.x=0;gg.visible=true;}
+      else if(q>=k*.15&&cur){const u=(q-k*.15)/.15,p=cyc(u,LXS[k],h,s.b,true);gg.visible=true;gg.rotation.x=p.rot;gg.position.set(p.x,p.rot>0.001?lerp(4.55,p.bot+h/2,1-p.rot/(Math.PI/2)):p.bot+h/2,0);}
+      else{gg.visible=true;gg.rotation.x=Math.PI/2;gg.position.set(LXS[k],4.55,0);}});
+    const mh=MOT.t-MOT.b;if(q>=.78){mg.visible=true;mg.position.set(PX,(MOT.b+MOT.t)/2,0);mg.rotation.x=0;}
+    else if(q>=.6&&cur){const p=cyc((q-.6)/.18,LXM,mh,MOT.b,false);mg.visible=true;mg.position.set(p.x,p.bot+mh/2,0);mg.rotation.x=0;}
+    else{mg.visible=true;mg.position.set(LXM,4.0+mh/2,0);mg.rotation.x=0;}
+    const pp=q>.78?smooth((q-.78)/.22):0;pg.visible=pp>0.01;pg.scale.x=Math.max(pp,.01);}
+   g.visible=vis&&LAYER.equip;el.show=vis;}});
+  g.traverse(o=>{});
+ }
+})();
+
+/* ---- 20 t overhead crane (runway beams at +13.43): bridge moves in z, trolley in x; every pump lift is carried out by it */
+const CR={g:new THREE.Group()};
+(function(){const g=CR.g;M.add(g);g.visible=false;
+ const br=grp(g,0,0,0),b=PBLD(),X0=XA-.2,X1=XC+.2,Lx=X1-X0;
+ [-.75,.75].forEach(z=>b.rbox(Lx,1.25,.55,(X0+X1)/2,14.3,z,K.yel,0,0,0,.05));b.box(Lx,.12,1.9,(X0+X1)/2,14.95,0,0x5A6770).box(Lx,.9,.08,(X0+X1)/2,15.5,1.0,K.steel).box(Lx,.9,.08,(X0+X1)/2,15.5,-1.0,K.steel);
+ [X0,X1].forEach(x=>{b.rbox(.9,.9,3.0,x,14.0,0,K.yel,0,0,0,.1);[-1.0,1.0].forEach(z=>b.cylx(.32,.4,x,13.55,z,K.dark));});
+ b.rbox(1.6,1.9,1.5,X0+1.2,13.1,1.8,K.wht,0,0,0,.1).box(1.4,.8,.05,X0+1.2,13.3,2.56,K.glass).box(.1,1.4,.1,X0+2.0,14.7,1.8,K.steel);
+ br.add(b.build());
+ const tl=grp(br,0,0,0),tb=PBLD();tb.rbox(1.9,.5,1.8,0,13.45,0,K.dark,0,0,0,.08).rbox(1.5,.9,1.3,.1,14.2,0,K.red,0,0,0,.1).cylz(.42,1.2,-.5,13.9,0,K.steel).box(.3,.3,1.7,0,13.1,0,K.grey);tl.add(tb.build());
+ const rope=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x111111}));rope.scale.set(.06,6,.06);const rope2=rope.clone();tl.add(rope);tl.add(rope2);
+ const hk=grp(tl,0,8,0),hb=PBLD();hb.rbox(.9,.7,.7,0,0,0,K.red,0,0,0,.2).cyl(.1,.5,0,-.55,0,K.dark).box(.18,.12,.5,0,-.9,0,K.dark);hk.add(hb.build());
+ const sl=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x222222}));sl.scale.set(.05,1,.05);hk.add(sl);
+ CR.br=br;CR.tl=tl;CR.hk=hk;CR.rope=rope;CR.rope2=rope2;
+ g.traverse(o=>{if(o.isMesh)o.userData.m0=o.material;});
+ El(g,{layer:'equip',name:'Overhead crane 20 t main + 5 t auxiliary',reveal:'EQ110',custom:(el,t)=>{const pr=P('EQ110',t);el.show=pr>0;const st=pr>=1?2:(pr>0?1:0);
+  if(el.st!==st){el.st=st;g.traverse(o=>{if(o.isMesh)o.material=st===2?o.userData.m0:MAT.amber;});}
+  const cs=craneState(t);br.position.z=pr>=1?cs.zb:-6;tl.position.x=cs.hx;const hy=cs.hy,top=13.2;
+  rope.position.set(-.18,(top+hy)/2,.25);rope.scale.y=Math.max(.2,top-hy);rope2.position.set(.18,(top+hy)/2,-.25);rope2.scale.y=Math.max(.2,top-hy);hk.position.y=hy;
+  // the load hangs from the hook block by a short sling
+  g.visible=el.show&&LAYER.equip;}});})();
+
+/* ---- 6 traveling water screens, stop logs (2 sets x 6), sluice gates (6); positions from section 67 */
+const CW=(41.25-2-5)/6, XTWS=54.4, XSL1=51.3, XSL2=58.6, XGATE=70.0, XSILL=65.3;
+function gEl(layer,name,reveal,prog,build){const g=new THREE.Group();build(g);g.traverse(o=>{if(o.isMesh)o.userData.m0=o.material;});
+ return El(g,{layer,name,reveal,custom:(el,t)=>{const pr=prog(t);el.show=pr>0;const st=pr>=1?2:(pr>0?1:0);if(el.st!==st){el.st=st;g.traverse(o=>{if(o.isMesh)o.material=st===2?o.userData.m0:MAT.amber;});}g.visible=el.show&&LAYER[el.layer];}});}
+function twsFrame(zc){const b=PBLD(),x0=XTWS;
+ [[-1.15,-2.2],[1.15,-2.2],[-1.15,2.2],[1.15,2.2]].forEach(c=>b.box(.26,12.6,.26,x0+c[0],-2.0,zc+c[1],0x9AA3A8));
+ for(let y=-7.6;y<4.0;y+=2.6){[-2.2,2.2].forEach(z=>{b.box(2.3,.14,.14,x0,y,zc+z,0x9AA3A8);b.beam([x0-1.15,y,zc+z],[x0+1.15,y+2.6,zc+z],.1,0x9AA3A8);b.beam([x0+1.15,y,zc+z],[x0-1.15,y+2.6,zc+z],.1,0x9AA3A8);});}
+ [-1.95,1.95].forEach(z=>{b.box(.12,12.1,.14,x0-.55,-2.0,zc+z,0x39424A);b.box(.12,12.1,.14,x0+.55,-2.0,zc+z,0x39424A);});               // chain strands
+ b.cylz(.5,4.2,x0,-7.6,zc,0x39424A);                                                                                                // lower sprocket shaft
+ b.rbox(3.4,.5,4.8,x0,4.25,zc,0x6B747C,0,0,0,.1);                                                                                  // support frame on the deck
+ b.rbox(3.0,1.6,4.2,x0,5.3,zc,0x9AA3A8,0,0,0,.035).box(2.6,.15,4.0,x0,6.2,zc,0x7E888E);                                           // head housing
+ b.cylz(.45,4.4,x0,5.0,zc,K.steel);b.rbox(1.0,.9,1.1,x0+.9,6.55,zc+1.2,0x57656D,0,0,0,.2).cylx(.3,.7,x0+1.55,6.55,zc+1.2,K.dark);    // drive
+ b.cylz(.12,4.0,x0-.5,3.5,zc,0x9AA7B1);for(let i=-3;i<=3;i++)b.box(.05,.14,.1,x0-.6,3.4,zc+i*.5,K.dark);                              // spray header
+ b.rbox(.8,.6,4.0,x0-1.2,3.9,zc,0x6B747C,0,0,0,.15);                                                                               // debris trough
+ const wx=XTWS-4.7;b.rbox(1.4,.5,1.8,wx,4.25,zc,0x5E6B75,0,0,0,.1).cyl(.45,.9,wx,4.95,zc,0xAB789D).rbox(.8,.8,.8,wx,5.8,zc,0x6A829E,0,0,0,.2).cylx(.12,4.7,wx+2.4,4.45,zc,0x9AA7B1);
+ return b.build();}
+for(let k=0;k<6;k++){const zc=-20.625+1.0+CW/2+k*(CW+1.0);
+ boxEl('walls','Sill wall EL -5.30, channel '+(k+1),'WB1P',XSILL,zc,0.5,CW,RT,-5.3,{pre:[{act:'WB1R',style:'rebar'},{act:'WB1F',style:'form'}]});
+ gEl('equip','Traveling water screen TWS-'+(k+1)+' (dual-flow band screen, 4 mm mesh, with screen-wash pump)','EQ140',t=>clamp(P('EQ140',t)*6-k,0,1),g=>{
+  g.add(twsFrame(zc));
+  [[-.55,0],[.55,1]].forEach(f=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(3.7,11.6),SCRM[f[1]]);m.rotation.y=Math.PI/2;m.position.set(XTWS+f[0],-2.1,zc);m.userData.m0=SCRM[f[1]];g.add(m);});});
+ [[XSL1,1],[XSL2,2]].forEach(s=>gEl('equip','Stop log set '+s[1]+', channel '+(k+1)+' (5 stacked panels, J-bulb seals)','EQ120',t=>clamp(P('EQ120',t)*6-k,0,1),g=>{const b=PBLD(),w=CW-.5;
+  for(let j=0;j<5;j++){const y=RT+1.15+2.3*j;b.rbox(.3,2.18,w,s[0],y,zc,0x9AA3A8,0,0,0,.04);for(const dy of[-.7,0,.7])b.box(.14,.14,w-.2,s[0]-.2,y+dy,zc,0x6D777E);[-1,1].forEach(q=>b.box(.1,2.1,.1,s[0]+.08,y,zc+q*(w/2-.05),K.rub));b.box(.2,.12,.5,s[0],y+1.0,zc,K.dark);}
+  [-1,1].forEach(q=>b.box(.5,11.6,.22,s[0],-2.75,zc+q*(CW/2-.1),0x59646C));b.box(.3,.2,w,s[0],9.0,zc,0x59646C);g.add(b.build());}));
+ gEl('equip','Sluice gate SG-'+(k+1)+' (invert -7.5, stem + actuator)','EQ120',t=>clamp(P('EQ120',t)*6-k,0,1),g=>{const b=PBLD();
+  b.rbox(.55,4.6,4.6,XGATE+.15,-5.7,zc,0x3C4850,0,0,0,.04).rbox(.3,3.8,3.8,XGATE,-5.7,zc,0x547E67,0,0,0,.06);for(const dy of[-1.2,0,1.2])b.box(.14,.14,3.6,XGATE-.2,-5.7+dy,zc,0x226B43);
+  b.cyl(.09,10.3,XGATE,-.4,zc,0xB7BEC4).cyl(.2,10.0,XGATE,-.4,zc,0x7A858D).rbox(1.1,.9,1.1,XGATE+.2,4.6,zc,0x3C4850,0,0,0,.1).rbox(.8,.7,.8,XGATE+.2,5.5,zc,0x547E67,0,0,0,.2).cyl(.4,.05,XGATE+.2,6.0,zc,0x2B7A3B).cyl(.05,.3,XGATE+.2,5.85,zc,K.dark);g.add(b.build());});}
+gEl('equip','Stop log lifter (frame on the +4.0 deck)','EQ120',t=>P('EQ120',t),g=>{const zc=-20.625+1.0+CW/2,b=PBLD();
+ [-3.1,3.1].forEach(z=>b.rbox(.35,3.6,.35,XSL1,5.8,zc+z,K.yel,0,0,0,.1));b.rbox(.6,.45,6.8,XSL1,7.7,zc,K.yel,0,0,0,.1).box(.15,1.2,.15,XSL1,6.9,zc,K.steel).box(.4,.3,.4,XSL1,6.2,zc,K.red);g.add(b.build());});
+
+/* ---- HVAC: 8 rooftop exhaust fans EXF-01 and 10 fresh-air louvres FAL-01 (M0-7310/7311/7312) */
+(function(){
+ const FX=XA+1.2, FZ=[ZP[0]+5.0,ZP[2]+3.2,ZP[3]+3.3,ZP[4]+3.3,ZP[6]+3.1,ZP[7]+3.3,ZP[8]+3.3,ZP[10]+1.8];
+ FZ.forEach((z,i)=>gEl('hvac','Rooftop exhaust fan EXF-01 ('+(i+1)+' of 8): 5,612 l/s, 1.5 kW, 1.05 x 1.05 m opening','MS110',t=>clamp(P('MS110',t)*8-i,0,1),g=>{const b=PBLD();
+  b.rbox(1.35,.5,1.35,FX,17.8,z,0x9EA3A6,0,0,0,.04).cyl(.66,.55,FX,18.3,z,0x8C9397).cyl(.7,.08,FX,18.62,z,0x70777C).cone(.62,.3,FX,18.8,z,0x7F878C);
+  b.box(.4,.4,.3,FX+.85,18.2,z,0x3A4046);g.add(b.build());}));
+ const FL=[];bayZ.forEach((b,k)=>{if(k>=2&&k<=9)FL.push({x:XC+.22,z:b.z,side:'x'});});FL.push({x:(XA+XC)/2,z:-34.475-.22,side:'z'});FL.push({x:(XA+XC)/2,z:34.475+.22,side:'z'});
+ FL.forEach((f,i)=>gEl('hvac','Fresh-air louvre FAL-01 ('+(i+1)+' of 10): 3,500 x 2,200, bottom EL +8.60, with sand trap','MS120',t=>clamp(P('MS120',t)*10-i,0,1),g=>{
+  const m=new THREE.Mesh(UB,MAT.louv);const w=f.side==='x'?[.1,2.0,3.3]:[3.3,2.0,.1];m.scale.set(w[0],w[1],w[2]);m.position.set(f.x,9.7,f.z);m.userData.m0=MAT.louv;g.add(m);
+  const b=PBLD(),sx=f.side==='x',L=3.5,H=2.2;b.box(sx?.3:L,.14,sx?L:.3,f.x,9.7+H/2,f.z,0x59646C).box(sx?.3:L,.14,sx?L:.3,f.x,9.7-H/2,f.z,0x59646C).box(sx?.3:.14,H,sx?.14:.3,f.x,9.7,f.z+(sx?L/2:0),0x59646C).box(sx?.3:.14,H,sx?.14:.3,f.x,9.7,f.z-(sx?L/2:0),0x59646C);
+  if(!sx){b.box(.14,H,.3,f.x+L/2,9.7,f.z,0x59646C).box(.14,H,.3,f.x-L/2,9.7,f.z,0x59646C);}g.add(b.build());}));
+})();
+
+/* ---- continuous animation of devices (running traveling screens) */
+ANIMS.push({on:t=>{const a=BY['EQ140'];return !!a&&t>=a.f&&LAYER.equip;},upd:(c,t)=>{TEXF.offset.y=-(c*.35)%1;TEXB.offset.y=(c*.35)%1;}});
+
+/* ---- equipment labels */
+(function(){const g=group('mlabels');const L2=(t,x,y,z)=>g.add(label(t,V(x,y,z),{size:2.3,bg:'rgba(38,48,58,.9)'}));
+ const z9=PZ[9];L2('VERTICAL TURBINE PUMP x19 (motor +8.35, bell -7.75)',PX,10.5,z9);L2('CHECK VALVE',-2.5,7.2,z9);L2('ISOLATION VALVE',-3.7,8.2,z9);L2('DISMANTLING JOINT',-4.7,6.6,z9);L2('DN1000 DISCHARGE (to pipe lines)',-11.7,6.6,z9);
+ const zc3=-20.625+1.0+CW/2+3*(CW+1.0);L2('STOP LOG 1 (5 panels, x6 channels)',XSL1,9.4,zc3);L2('TRAVELING WATER SCREEN x6',XTWS,10.4,zc3);L2('STOP LOG 2',XSL2,9.4,zc3);L2('SLUICE GATE x6 (invert -7.5)',XGATE,8.2,zc3);L2('SCREEN-WASH PUMP',XTWS-4.7,7.4,zc3);L2('SILL EL -5.30',XSILL,-3.0,zc3);
+ L2('EXF-01 ROOFTOP FANS x8 (5,612 l/s)',XA+1.2,22.0,ZP[3]);L2('FAL-01 LOUVRES x10 (3.5 x 2.2, EL +8.6)',XC+3,12.4,bayZ[5].z);L2('OVERHEAD CRANE 20 t',(XA+XC)/2,16.6,-8);})();
+
+
+/* ------------------------------------------------------------ MEP / I&C symbols */
+(function(){
+ const mepEl=(m,name,act,i,n,mat0)=>{const th=(i+1)/n,th0=i/n;El(m,{layer:'mep',name,custom:(el,t)=>{const pr=P(act,t);el.show=pr>th0;el.mesh.material=pr>=th?mat0:MAT.amber;el.mesh.visible=el.show&&LAYER.mep;}});};
+ [XA+0.9,XC-0.9].forEach((x,s)=>{const m=new THREE.Mesh(UB,MAT.tray);m.scale.set(.5,.15,66);m.position.set(x,9.4,0);mepEl(m,'Cable ladder tray (BOQ 2.2.3.1-4)','EL110',s,2,MAT.tray);});
+ for(let i=0;i<27;i++){const z=-33+i*2.5;const m=new THREE.Mesh(UB,MAT.light);m.scale.set(.5,.25,1.2);m.position.set((XA+XC)/2+(i%2?1.2:-1.2),15.6,z);mepEl(m,'High-bay luminaire (BOQ 2.2.3.14-16)','EL130',i,27,MAT.light);}
+ [XA-.8,XC+.8].forEach((x,s)=>{const m=new THREE.Mesh(UC,MAT.fire);m.scale.set(.18,1,.18);m.rotation.x=Math.PI/2;m.scale.set(.18,66,.18);m.position.set(x,4.4,0);mepEl(m,'Fire water pipework (BOQ 2.2.4.7,9,10)','MS230',s,2,MAT.fire);});
+ [[XA-.7,-34],[XC+.7,-34],[XA-.7,34],[XC+.7,34],[XA-.7,-12],[XC+.7,-12],[XA-.7,12],[XC+.7,12]].forEach((p,i)=>{const m=new THREE.Mesh(UC,MAT.rain);m.scale.set(.12,21.6/2,.12);m.position.set(p[0],6.8+0,p[1]);m.scale.set(.12,13.6,.12);m.position.set(p[0],10.4,p[1]);mepEl(m,'Rain-water down spout (BOQ 2.2.2.20)','AR550',i,8,MAT.rain);});
+ for(let i=0;i<14;i++){const west=i<7,z=-33+(i%7)*11,gg=new THREE.Group(),sg=west?-1:1,mm=mk(0xD6D8D4),md=mk(0x3A4046);const arm=new THREE.Mesh(UB,md);arm.scale.set(.4,.06,.06);arm.position.set(sg*.2,0,0);gg.add(arm);const body=new THREE.Mesh(UB,mm);body.scale.set(.5,.22,.22);body.position.set(sg*.6,-.03,0);gg.add(body);const lens=new THREE.Mesh(UB,md);lens.scale.set(.06,.14,.14);lens.position.set(sg*.86,-.03,0);gg.add(lens);gg.position.set(west?XA-.125:XC+.125,12.0,z);gg.userData.m0=null;
+  const th=(i+1)/14,th0=i/14;El(gg,{layer:'mep',name:'CCTV camera on wall bracket (BOQ 2.2.5.57-63)',custom:(el,t)=>{const pr=P('IC250',t);el.show=pr>th0;el.mesh.visible=el.show&&LAYER.mep;}});}
+ for(let i=0;i<3;i++){const m=new THREE.Mesh(UB,MAT.steel);m.scale.set(1.0,2.2,.6);m.position.set(XA+1.2,5.1,-33+i*1.2);mepEl(m,'DB-PS / DB-VAC-PS (BOQ 2.2.3.12-13)','EL140',i,3,MAT.steel);}
+ for(let i=0;i<23;i++){const m=new THREE.Mesh(UC,MAT.steel);m.scale.set(.14,.5,.14);m.position.set(1.1+(i%2)*0.15,-1.5-(i%3)*1.5,-27.9+3.1*(i%19));mepEl(m,'Field instrument – level / pressure transmitter (BOQ 2.2.5.21-22)','IC310',i,23,MAT.steel);}
+})();
+
+/* ------------------------------------------------------------ context: intake pipes (marine WBS) */
+(function(){[-9,-3,3,9].forEach((z,i)=>{const m=new THREE.Mesh(UC,MAT.pipe);m.scale.set(1.0,14,1.0);m.rotation.z=Math.PI/2;m.position.set(71.3+7,-6.5,z*1.0);El(m,{layer:'ctx2',name:'Intake pipeline DN2000 (marine WBS, context)',custom:(el,t)=>{el.show=P('B520',t)>=1;el.mesh.visible=LAYER.ctx2;}});});})();
+
+
+
+/* ------------- excavator 35 t (merged parts, articulated) */
+function mkExc(brk){const root=new THREE.Group();
+ const tr=PBLD();[-1,1].forEach(s=>{const x=s*1.45;tr.box(.9,.4,5.0,x,.2,0,K.rub).box(.55,.55,4.3,x,.7,0,K.grey).cylx(.52,.85,x,.55,2.25,K.dark).cylx(.56,.85,x,.55,-2.25,K.dark);for(let k=-1.6;k<=1.7;k+=.8)tr.cylx(.28,.55,x,.38,k,K.dark);for(let k=-2.4;k<=2.4;k+=.3)tr.box(.95,.06,.2,x,.03,k,K.dark);});tr.box(2.2,.6,2.8,0,.8,0,K.grey);root.add(tr.build());
+ const sw=grp(root,0,1.1,0);const hs=PBLD();
+ hs.box(3.05,.45,4.2,0,.2,0,K.yel).box(2.7,1.35,1.9,0,1.05,-1.2,K.yel).box(2.95,1.2,1.0,0,.9,-2.5,K.grey).box(2.4,.08,1.3,0,1.76,-1.2,K.dark)
+   .box(1.55,1.9,1.7,-.7,1.7,1.0,K.yel).box(1.4,1.1,.06,-.7,1.95,1.86,K.glass).box(.06,1.1,1.3,-1.5,1.95,1.0,K.glass).box(1.7,.12,1.9,-.7,2.7,1.0,K.dark).box(.7,1.05,1.7,1.2,.85,1.0,K.dark)
+   .cyl(.1,1.0,-1.1,2.3,-2.0,K.dark).box(.5,.1,3.4,1.5,1.0,-.2,K.steel);sw.add(hs.build());
+ const bm=grp(sw,.35,.95,1.55);const bp=PBLD();bp.box(.75,1.0,2.6,0,.1,1.2,K.yel,-.13).box(.75,.85,2.4,0,.28,3.55,K.yel,.2).cylz(.17,.85,0,.1,0,K.dark).cylz(.17,.85,0,-.1,5.0,K.dark).cylx(.1,.9,0,.65,1.6,K.steel);bm.add(bp.build());
+ const st=grp(bm,0,-.12,5.0);const sp=PBLD();sp.box(.55,.6,3.5,0,0,1.65,K.yel).cylz(.15,.7,0,0,3.35,K.dark);st.add(sp.build());
+ const bk=grp(st,0,0,3.35);const bpb=PBLD();
+ if(brk){bpb.box(.35,.3,.6,0,-.15,.1,K.dark).box(.28,2.7,.28,0,-1.6,.3,K.steel).cone(.12,.8,0,-3.1,.3,K.dark);}
+ else{bpb.box(1.55,.95,1.25,0,-.55,.55,K.dark,.3).box(1.6,.12,.9,0,-.95,1.15,K.steel);for(let i=-3;i<=3;i++)bpb.box(.16,.35,.2,i*.23,-1.05,1.3,K.steel,.2);}
+ bk.add(bpb.build());const cy=[];for(let i=0;i<3;i++){const b=mkStrut(.36,K.dark),r=mkStrut(.18,K.steel);sw.add(b);sw.add(r);cy.push([b,r]);}return{g:root,sw,bm,st,bk,cy};}
+function exUpd(x){const a1=x.bm.rotation.x,a2=x.st.rotation.x,a3=x.bk.rotation.x,B0=[.95,1.55],S0=[-.12,5.0],K0=[0,3.35],X=.35;
+ const toSw=(lvl,p)=>{let q=p;if(lvl>=3){const r=R2(a3,q);q=[K0[0]+r[0],K0[1]+r[1]];}if(lvl>=2){const r=R2(a2,q);q=[S0[0]+r[0],S0[1]+r[1]];}if(lvl>=1){const r=R2(a1,q);q=[B0[0]+r[0],B0[1]+r[1]];}return[X,q[0],q[1]];};
+ const pairs=[[[X,1.15,.5],toSw(1,[.55,1.9])],[toSw(1,[.8,3.4]),toSw(2,[.4,.9])],[toSw(2,[.5,2.5]),toSw(3,[.15,.3])]];
+ pairs.forEach((p,i)=>{const a=p[0],b=p[1];const m=[a[0]+(b[0]-a[0])*.5,a[1]+(b[1]-a[1])*.5,a[2]+(b[2]-a[2])*.5];strut(x.cy[i][0],a,m);strut(x.cy[i][1],m,b);});}
+/* ------------- rigid dump truck */
+function mkDump(){const g=new THREE.Group(),ch=PBLD();
+ ch.box(1.4,.55,9.2,0,1.25,0,K.dark).box(2.6,.15,9.0,0,1.55,.1,K.grey);
+ ch.box(2.3,2.0,2.1,0,3.15,3.1,K.cab).box(2.0,1.2,2.4,0,2.25,5.1,K.cab).box(1.9,.9,.06,0,3.4,4.17,K.glass).box(.06,.9,1.2,-1.17,3.4,3.1,K.glass).box(.06,.9,1.2,1.17,3.4,3.1,K.glass).box(2.9,.18,3.0,0,4.4,1.9,K.cab)
+   .box(2.4,.3,.35,0,1.0,6.5,K.dark).cyl(.1,1.4,-.9,4.2,3.6,K.dark).box(.5,.3,.1,-.7,2.3,6.35,K.wht).box(.5,.3,.1,.7,2.3,6.35,K.wht).box(.5,.9,1.2,1.5,1.4,2.5,K.dark).box(.35,.35,.35,0,.6,-4.7,K.dark);
+ [[-1.45,3.7],[1.45,3.7],[-1.45,-2.2],[1.45,-2.2],[-1.45,-3.6],[1.45,-3.6]].forEach(a=>ch.box(.2,.3,1.1,a[0]*.62,1.0,a[1],K.dark));g.add(ch.build());
+ const wh=[];[[3.7],[-2.2],[-3.6]].forEach(z=>[-1,1].forEach(s=>{const w=wheel(.85,.7,K.steel);w.position.set(s*1.5,.85,z[0]);g.add(w);wh.push(w);}));
+ const bed=grp(g,0,2.1,-4.5);const bb=PBLD();bb.box(3.3,.25,6.8,0,0,3.3,K.bedc,-.06).box(.28,1.9,6.6,-1.6,1.0,3.4,K.bedc).box(.28,1.9,6.6,1.6,1.0,3.4,K.bedc).box(3.3,2.3,.3,0,1.15,6.55,K.bedc).box(3.3,.5,.3,0,.55,-.1,K.bedc);
+ for(let k=.8;k<6.6;k+=1.3)bb.box(.4,2.0,.18,-1.62,1.0,k,K.dark).box(.4,2.0,.18,1.62,1.0,k,K.dark);bed.add(bb.build());
+ const ldm=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x6B5D4C}));ldm.scale.set(2.7,.1,6.0);ldm.position.set(0,.3,3.3);bed.add(ldm);const hb=mkStrut(.36,K.dark),hr=mkStrut(.2,K.steel);g.add(hb);g.add(hr);return{g,bed,wh,load:ldm,hoist:[hb,hr]};}
+function dumpUpd(tk,ang){const H=[2.1,-4.5],A=[1.5,-2.4],q=R2(-ang,[.6,2.8]),P1=[0,H[0]+q[0],H[1]+q[1]],a=[0,A[0],A[1]],m=[0,a[1]+(P1[1]-a[1])*.55,a[2]+(P1[2]-a[2])*.55];strut(tk.hoist[0],a,m);strut(tk.hoist[1],m,P1);}
+/* ------------- transit mixer */
+const drumTex=(function(){const c=document.createElement('canvas');c.width=128;c.height=128;const x=c.getContext('2d');x.fillStyle='#EEEEE8';x.fillRect(0,0,128,128);x.strokeStyle='#C2302A';x.lineWidth=14;for(let i=-2;i<4;i++){x.beginPath();x.moveTo(-10,i*40+20);x.lineTo(140,i*40-10);x.stroke();}const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(1,2);return t;})();
+function mkMixer(){const g=new THREE.Group(),ch=PBLD();
+ ch.box(1.4,.55,9.0,0,1.25,0,K.dark).box(2.3,2.0,2.0,0,3.1,3.2,K.blu).box(1.9,.9,.06,0,3.35,4.22,K.glass).box(.06,.9,1.2,-1.17,3.35,3.2,K.glass).box(.06,.9,1.2,1.17,3.35,3.2,K.glass).box(2.0,1.2,2.2,0,2.2,5.1,K.blu).box(2.4,.3,.3,0,1.0,6.4,K.dark)
+   .box(1.2,.9,1.4,1.4,1.5,1.0,K.steel).box(.6,1.3,.9,-1.3,1.4,0,K.dark).box(2.2,.5,1.2,0,1.9,-4.2,K.steel).box(.15,2.4,.15,1.2,2.6,-4.4,K.dark);g.add(ch.build());
+ const wh=[];[[3.8],[-1.7],[-3.1]].forEach(z=>[-1,1].forEach(s=>{const w=wheel(.62,.5,K.steel);w.position.set(s*1.5,.62,z[0]);g.add(w);wh.push(w);}));
+ const dr=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.25,5.4,26,1,true),new THREE.MeshLambertMaterial({map:drumTex,side:THREE.DoubleSide}));dr.rotation.x=Math.PI/2+.2;dr.position.set(0,3.1,-1.4);const dg=grp(g,0,3.1,-1.4);dg.rotation.x=0;
+ const drum=new THREE.Group();drum.rotation.x=-.2;dg.add(drum);const dm=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.2,5.4,26,1,true),new THREE.MeshLambertMaterial({map:drumTex,side:THREE.DoubleSide}));dm.rotation.x=Math.PI/2;drum.add(dm);
+ const cap=PBLD();cap.cone(1.2,.9,0,0,3.0,K.wht);drum.add(cap.build());const front=PBLD();front.cone(.7,.9,0,0,-3.0,K.wht);drum.add(front.build());drum.userData.dm=dm;
+ return{g,wh,drum,dm};}
+/* ------------- wheel loader, dozer, roller */
+function mkLoader(){const g=new THREE.Group(),rear=grp(g,0,0,-1.6),front=grp(g,0,0,1.8);const rb=PBLD();rb.box(2.7,1.5,3.6,0,1.35,0,K.yel).box(2.5,1.0,1.3,0,2.4,-1.4,K.grey).box(1.7,1.6,1.7,0,2.9,.4,K.yel).box(1.5,.9,.05,0,3.15,1.28,K.glass).box(1.8,.1,1.8,0,3.75,.4,K.dark);rear.add(rb.build());
+ const fb=PBLD();fb.box(2.6,1.2,2.4,0,1.2,0,K.yel);front.add(fb.build());const arm=grp(front,0,1.55,.8);const ab=PBLD();ab.box(.35,.5,3.4,-1.15,0,1.7,K.yel,-.12).box(.35,.5,3.4,1.15,0,1.7,K.yel,-.12);arm.add(ab.build());
+ const bk=grp(arm,0,-.4,3.4);const bb=PBLD();bb.box(3.3,1.1,1.5,0,-.2,.5,K.dark,.2).box(3.3,.12,1.1,0,-.7,1.2,K.steel);bk.add(bb.build());
+ const wh=[];[[-1.4,-1.5],[1.4,-1.5]].forEach(a=>{const w=wheel(1.0,.8,K.steel);w.position.set(a[0],1.0,a[1]);rear.add(w);wh.push(w);});[[-1.4,0],[1.4,0]].forEach(a=>{const w=wheel(1.0,.8,K.steel);w.position.set(a[0],1.0,a[1]);front.add(w);wh.push(w);});
+ return{g,front,arm,bk,wh};}
+function mkDozer(){const g=new THREE.Group(),b=PBLD();[-1,1].forEach(s=>{const x=s*1.35;b.box(.85,.4,4.3,x,.2,0,K.rub).box(.55,.8,3.8,x,.8,0,K.grey).cylx(.5,.8,x,.6,2.0,K.dark).cylx(.55,.8,x,.65,-2.0,K.dark);});
+ b.box(2.4,1.2,3.2,0,1.5,-.2,K.yel).box(2.2,1.0,1.2,0,2.4,-1.1,K.grey).box(1.7,1.7,1.7,0,2.7,.5,K.yel).box(1.5,.9,.05,0,2.95,1.38,K.glass).box(1.9,.1,1.9,0,3.6,.5,K.dark).box(.3,.3,2.2,-1.5,1.1,2.8,K.dark).box(.3,.3,2.2,1.5,1.1,2.8,K.dark);g.add(b.build());
+ const bl=grp(g,0,0,3.8);const bp=PBLD();bp.box(4.0,1.5,.35,0,.9,0,K.dark,-.15).box(4.1,.2,.5,0,.2,.1,K.steel);bl.add(bp.build());return{g,bl};}
+function mkRoller(){const g=new THREE.Group(),b=PBLD();b.box(2.3,1.5,3.0,0,1.9,-1.0,K.yel).box(1.9,1.3,1.6,0,2.9,-.6,K.yel).box(1.6,.9,.05,0,3.0,.25,K.glass).box(2.1,.1,1.8,0,3.65,-.6,K.dark).box(2.4,.3,1.0,0,1.2,1.2,K.dark);g.add(b.build());
+ const dr=grp(g,0,1.0,1.7);const d=PBLD();d.cylx(1.0,2.2,0,0,0,K.steel).cylx(.5,2.3,0,0,0,K.dark);dr.add(d.build());const rr=grp(g,0,.9,-2.2);const d2=PBLD();[-.85,.85].forEach(x=>d2.cylx(.9,.9,x,0,0,K.rub));rr.add(d2.build());return{g,dr,rr};}
+/* ------------- boom concrete pump (truck-mounted) with articulated boom fitted to the target */
+function mkPump(){const g=new THREE.Group(),b=PBLD();
+ b.box(1.6,.6,12,0,1.15,0,K.dark).box(2.4,1.9,2.1,0,2.9,5.2,K.red).box(2.1,1.2,2.2,0,2.0,7.0,K.red).box(1.9,.9,.06,0,3.1,6.27,K.glass).box(2.5,1.7,3.2,0,2.1,-3.2,K.wht).box(2.4,.8,1.6,0,3.4,-5.6,K.steel).box(2.2,2.2,2.6,0,3.2,-1.2,K.red).cyl(.7,1.0,0,4.5,-1.2,K.dark);
+ [[-4.2,-4.0],[4.2,-4.0],[-4.2,3.0],[4.2,3.0]].forEach(o=>{b.box(Math.abs(o[0])*2-1.3,.3,.4,0,1.1,o[1],K.dark);b.box(.4,.9,.4,o[0],.75,o[1],K.org);b.box(1.2,.2,1.2,o[0],.1,o[1],K.dark);});g.add(b.build());
+ const wh=[];[[6.2],[4.4],[-1.0],[-2.6],[-4.2]].forEach(z=>[-1,1].forEach(s=>{const w=wheel(.65,.5,K.steel);w.position.set(s*1.5,.65,z[0]);g.add(w);wh.push(w);}));
+ const seg=[];for(let i=0;i<4;i++){const m=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:i%2?K.wht:K.red}));g.add(m);seg.push(m);}
+ const joints=[];for(let i=0;i<5;i++){const m=new THREE.Mesh(GCYL,new THREE.MeshLambertMaterial({color:K.dark}));m.rotation.z=Math.PI/2;g.add(m);joints.push(m);}
+ const hose=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:K.dark}));g.add(hose);return{g,seg,joints,hose,wh};}
+/* ------------- tower crane (lattice) */
+function mkTower(){const g=new THREE.Group(),H=46,b=PBLD();b.box(7,1.6,7,0,.8,0,K.cncr);latticeVert(b,0,0,2.0,1.6,H,3,.2,K.yel);g.add(b.build());
+ const sl=grp(g,0,H,0),hd=PBLD();hd.cyl(1.7,1.2,0,.6,0,K.grey).box(2.3,.5,2.3,0,1.45,0,K.yel).box(1.8,1.9,1.9,1.9,1.9,.0,K.yel).box(1.6,1.0,.06,2.85,2.2,0,K.glass).box(1.8,.1,1.9,1.9,2.9,0,K.dark);
+ // counter-jib + machinery + counterweight
+ const cj=PBLD();cj.box(.25,.25,18,0,0,0,K.yel);hd.box(18,.3,.3,-9,2.7,.0,K.yel).box(.3,.3,1.6,-9,2.0,.0,K.yel);for(let x=-2;x>-17;x-=2.4)hd.beam([x,2.6,-.9],[x-1.2,2.6,.9],.14,K.yel).beam([x,2.6,.9],[x-1.2,2.6,-.9],.14,K.yel);
+ hd.box(3.0,1.6,2.0,-4.5,1.6,0,K.grey).box(2.0,1.5,2.0,-15.5,1.8,0,K.cncr).box(2.0,1.5,2.0,-13.3,1.8,0,K.cncr).box(2.0,1.5,2.0,-17.7,1.8,0,K.cncr);
+ // jib (triangular lattice) 52 m
+ const jb=PBLD();[[0,2.3],[-.95,.6],[.95,.6]].forEach(c=>jb.box(52,.17,.17,26,c[1],c[0],K.yel));for(let x=0,k=0;x<52;x+=2.6,k++){const x2=x+2.6;jb.beam([x,.6,-.95],[x2,k%2?.6:2.3,0],.1,K.yel).beam([x,.6,.95],[x2,k%2?.6:2.3,0],.1,K.yel).beam([x,2.3,0],[x2,.6,k%2?.95:-.95],.1,K.yel);}
+ // A-frame and pendants
+ hd.beam([0,1.2,-.9],[2.5,14,0],.35,K.yel).beam([0,1.2,.9],[2.5,14,0],.35,K.yel).beam([2.5,14,0],[2.5,14.6,0],.5,K.yel);
+ sl.add(hd.build());sl.add(jb.build());
+ const pl=[[2.5,14,0],[24,2.3,0]],pl2=[[2.5,14,0],[50,2.3,0]],pc=[[2.5,14,0],[-8,2.7,0]],pc2=[[2.5,14,0],[-16,2.7,0]];
+ const lp=[];[pl,pl2,pc,pc2].forEach(a=>lp.push(new THREE.Vector3(...a[0]),new THREE.Vector3(...a[1])));
+ sl.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp),new THREE.LineBasicMaterial({color:0x222222})));
+ const tr=grp(sl,26,.6,0);const tb=PBLD();tb.box(1.8,.5,1.8,0,-.1,0,K.dark).box(.2,.4,2.0,0,.3,0,K.grey);tr.add(tb.build());
+ const rope=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x111111}));rope.scale.set(.07,10,.07);tr.add(rope);
+ const blk=grp(tr,0,-10,0);const kb=PBLD();kb.box(.9,.8,.9,0,0,0,K.red).cyl(.12,1.3,0,-.9,0,K.dark);blk.add(kb.build());
+ const load=grp(blk,0,-1.6,0);const lb=PBLD();lb.box(5.6,.35,.7,0,-.3,0,K.org).box(5.6,.3,.6,0,-.65,0,K.org).box(.1,1.4,.1,-2.6,.4,0,K.dark).box(.1,1.4,.1,2.6,.4,0,K.dark);load.add(lb.build());
+ return{g,sl,tr,rope,blk,load,H};}
+/* ------------- crawler crane (service) + cage, D-wall rig */
+function mkCrawler(skipMode){const g=new THREE.Group(),b=PBLD();[-1,1].forEach(s=>{const x=s*2.6;b.box(1.3,.5,8,x,.25,0,K.rub).box(.9,.9,7,x,.95,0,K.grey).cylx(.7,1.3,x,.8,3.6,K.dark).cylx(.7,1.3,x,.8,-3.6,K.dark);});b.box(4.0,.6,5.0,0,1.2,0,K.grey);g.add(b.build());
+ const sw=grp(g,0,1.5,0),u=PBLD();u.box(4.8,.5,6.2,0,.25,0,K.yel).box(4.2,2.2,2.6,0,1.6,-1.8,K.yel).box(3.4,2.4,2.4,0,1.2,-4.4,K.cncr).box(1.9,2.0,2.0,-1.3,2.0,1.6,K.yel).box(1.7,1.0,.06,-1.3,2.2,2.62,K.glass).box(2.1,.1,2.1,-1.3,3.05,1.6,K.dark).cylx(.6,1.0,0,1.8,-.4,K.dark);sw.add(u.build());
+ const bm=grp(sw,.6,1.6,1.0),bb=PBLD();latticeZ(bb,40,1.5,1.5,3.2,.22,K.yel,false);bm.add(bb.build());const tip=PBLD();tip.box(1.0,.9,1.0,0,0,40,K.dark).cylx(.6,.4,0,0,40,K.dark);bm.add(tip.build());
+ const rope=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x111111}));rope.scale.set(.08,10,.08);g.add(rope);const hook=grp(g,0,0,0);const hb=PBLD();hb.box(.8,.9,.8,0,0,0,K.red);hook.add(hb.build());
+ if(skipMode){const skip=grp(hook,0,-2.5,0),sb=PBLD();sb.box(2.2,.2,1.8,0,-1.0,0,0x6A7075).box(2.2,1.5,.14,0,-.25,.9,0x777E83).box(2.2,1.5,.14,0,-.25,-.9,0x777E83).box(.14,1.5,1.8,1.1,-.25,0,0x777E83).box(.14,1.5,1.8,-1.1,-.25,0,0x777E83).box(2.4,.1,.1,0,.52,.9,K.dark).box(2.4,.1,.1,0,.52,-.9,K.dark);
+  [[-1,-.8],[1,-.8],[-1,.8],[1,.8]].forEach(c=>sb.beam([0,2.4,0],[c[0],.5,c[1]],.05,K.dark));skip.add(sb.build());const ld=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x6B5D4C}));ld.scale.set(2.0,.9,1.6);ld.position.set(0,-.4,0);skip.add(ld);return{g,sw,bm,rope,hook,skip,load:ld};}
+ const cage=grp(hook,0,-.5,0);const cb=PBLD();[-1.2,1.2].forEach(x=>[-.22,.22].forEach(z=>cb.box(.12,30,.12,x,-15,z,K.org)));for(let y=-.5;y>-30;y-=1.4)cb.box(2.5,.07,.5,0,y,0,K.org).beam([-1.2,y,-.22],[1.2,y-1.4,.22],.06,K.org);cage.add(cb.build());
+ return{g,sw,bm,rope,hook,cage};}
+function mkDwRig(){const g=new THREE.Group(),b=PBLD();[-1,1].forEach(s=>{const x=s*2.2;b.box(1.5,.5,7.4,x,.25,0,K.rub).box(1.0,1.0,6.4,x,.95,0,K.grey).cylx(.75,1.5,x,.85,3.4,K.dark).cylx(.8,1.5,x,.85,-3.4,K.dark);});b.box(4.4,.7,5.6,0,1.3,0,K.grey);g.add(b.build());
+ const u=PBLD();u.box(5.2,.5,6.8,0,1.9,0,K.yel).box(4.4,2.4,2.4,0,3.4,-2.2,K.yel).box(3.6,2.4,1.6,0,3.1,-4.0,K.cncr).box(1.9,2.0,2.0,-1.5,3.7,1.8,K.yel).box(1.7,1.0,.06,-1.5,3.9,2.82,K.glass).box(2.1,.1,2.1,-1.5,4.8,1.8,K.dark).cyl(.9,1.6,1.4,3.1,-1.0,K.dark);g.add(u.build());
+ const mb=PBLD();latticeVert(mb,0,3.5,1.7,2.2,38,3,.2,K.yel);mb.box(2.2,1.4,2.2,0,38.7,3.5,K.grey).box(1.4,.9,3.4,0,38.7,5.2,K.grey).cylx(.7,2.0,0,38.6,6.0,K.dark);g.add(mb.build());
+ const cutter=grp(g,0,0,6.0),cb=PBLD();cb.box(1.0,8.2,3.2,0,4.1,0,K.org).box(.8,2.2,2.6,0,9.0,0,K.dark);cutter.add(cb.build());
+ const wl=[];[-1.0,1.0].forEach(z=>{const w=PBLD();w.cylz(.85,1.15,0,0,0,K.steel);for(let k=0;k<8;k++)w.box(.14,.14,1.2,Math.cos(k*.785)*.9,Math.sin(k*.785)*.9,0,K.dark);const wm=w.build();wm.position.set(0,.8,z*1.1);wm.rotation.y=Math.PI/2;cutter.add(wm);wl.push(wm);});
+ const rope=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x111111}));rope.scale.set(.1,10,.1);g.add(rope);const hose=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:K.hose}));g.add(hose);
+ return{g,cutter,wl,rope,hose};}
+function mkDrill(){const g=new THREE.Group(),b=PBLD();b.box(2.4,.7,8,0,1.2,0,K.dark).box(2.4,2.0,2.0,0,2.8,3.4,K.org).box(2.0,1.5,2.4,0,2.2,-2.6,K.org).box(1.9,.9,.06,0,3.2,4.4,K.glass);[[-.9,3],[.9,3],[-.9,-3.3],[.9,-3.3]].forEach(a=>{});g.add(b.build());
+ [[3.4],[-1.8],[-3.2]].forEach(z=>[-1,1].forEach(s=>{const w=wheel(.62,.5,K.steel);w.position.set(s*1.4,.62,z[0]);g.add(w);}));
+ const mast=PBLD();latticeVert(mast,0,0,1.0,0,13,2.4,.14,K.org);const mg=grp(g,0,2.0,-4.3);mg.add(mast.build());
+ const head=grp(mg,0,6,.6),hb=PBLD();hb.box(.9,1.2,.9,0,0,0,K.steel);head.add(hb.build());const rod=new THREE.Mesh(GCYL,new THREE.MeshLambertMaterial({color:K.grey}));rod.scale.set(.1,12,.1);rod.position.set(0,0,.6);mg.add(rod);
+ return{g,head,rod};}
+function mkMobile(){const g=new THREE.Group(),b=PBLD();b.box(2.9,.9,14,0,1.1,0,K.dark).box(2.9,2.0,2.4,0,2.6,5.9,K.red).box(2.5,1.0,.06,0,2.9,7.12,K.glass).box(3.2,1.8,5.0,0,2.2,-2.4,K.wht).box(2.6,1.2,3.0,0,3.4,-5,K.red);
+ [[-5.2,-3.8],[5.2,-3.8],[-5.2,3.5],[5.2,3.5]].forEach(o=>{b.box(Math.abs(o[0])*2-1.5,.35,.5,0,1.0,o[1],K.dark);b.box(.45,1.0,.45,o[0],.6,o[1],K.org);b.box(1.4,.25,1.4,o[0],.12,o[1],K.dark);});g.add(b.build());
+ [[6],[4.2],[1],[-1.2],[-3.4]].forEach(z=>[-1,1].forEach(s=>{const w=wheel(.8,.6,K.steel);w.position.set(s*1.6,.8,z[0]);g.add(w);}));
+ const sw=grp(g,0,3.5,-2.4),bm=grp(sw,0,.3,0),bp=PBLD();bp.box(1.6,1.6,10,0,0,5,K.red).box(1.3,1.3,10,0,0,14,K.wht).box(1.0,1.0,10,0,0,22,K.red);bm.add(bp.build());
+ const rope=new THREE.Mesh(GBOX,new THREE.MeshLambertMaterial({color:0x111111}));rope.scale.set(.07,10,.07);g.add(rope);const hook=grp(g,0,0,0);const hb=PBLD();hb.box(.7,.9,.7,0,0,0,K.red);hook.add(hb.build());
+ return{g,sw,bm,rope,hook};}
+const ropeSet=(m,x,ytop,ybot,z)=>{m.position.set(x,(ytop+ybot)/2,z);m.scale.y=Math.max(.1,ytop-ybot);};
+
+/* ======================= excavation zone: excavators dig in the pit, crawler cranes with skips lift the soil out, dump trucks are loaded at ground level (no ramp) */
+(function(){
+ const nE=EQN.exc||3,nB=EQN.br||3,nH=Math.min(EQN.hoist||2,2),nT=EQN.trucks||6;
+ const PK=[[69,-14],[69,14]], HC=[[84.5,-14],[84.5,14]], ST=[[97,-14],[97,14]], DZ=[-1,1];
+ const B=[[10,-20,1.2],[12,16,-1.2],[56,22,2.0]];
+ const E=[[PK[0][0]-6,PK[0][1]-4.6],[PK[1][0]-6,PK[1][1]+4.6],[38,2]];
+ const yawTo=(e,p)=>Math.atan2(p[0]-e[0],p[1]-e[1]);
+ for(let i=0;i<nE;i++){const x=mkExc(false),e=E[i%E.length],psi=i<2?yawTo(e,PK[i])-1.5:.6;
+  addM('Excavators 30–35 t',nE,x.g,PITWIN,(c,t)=>{x.g.position.set(e[0],soilTop(t),e[1]);x.g.rotation.y=psi;const ph=(c/14+i*.31)%1;
+   const f=kf([[0,0,-.55,.85,-.15],[.18,0,-.68,1.5,1.2],[.38,1.5,-.9,.95,1.1],[.55,1.5,-.8,.85,-.45],[.78,0,-.6,.8,-.2],[1,0,-.55,.85,-.15]],ph);
+   x.sw.rotation.y=f[0];x.bm.rotation.x=f[1];x.st.rotation.x=f[2];x.bk.rotation.x=f[3];exUpd(x);});}
+ for(let i=0;i<nB;i++){const x=mkExc(true),e=B[i%B.length];
+  addM('Hydraulic breaker excavators',nB,x.g,PITWIN,(c,t)=>{const top=soilTop(t);x.g.position.set(e[0],top,e[1]);x.g.rotation.y=e[2]+Math.sin(c*.07+i)*.5;const k=Math.sin(c*14+i*2);
+   x.sw.rotation.y=Math.sin(c*.11+i)*.4;x.bm.rotation.x=-.4+.06*Math.sin(c*.3);x.st.rotation.x=1.35+.03*k;x.bk.rotation.x=.55;x.bk.position.y=.06*k;});}
+
+ // crawler cranes at the pit edge with muck skips; each serves its own truck group
+ for(let k=0;k<nH;k++){const cr=mkCrawler(true),hp=HC[k],pk=PK[k],stand=ST[k],dz=DZ[k];
+  const bear=(p)=>Math.atan2(p[0]-hp[0],p[1]-hp[1]),rad=(p)=>Math.hypot(p[0]-hp[0],p[1]-hp[1]);
+  const phiT=bear(stand),rT=rad(stand)-.5,phiP=bear(pk),rP=rad(pk);
+  addM('Crawler cranes with muck skips',nH,cr.g,PITWIN,(c,t)=>{cr.g.position.set(hp[0],GLV,hp[1]);cr.g.rotation.y=0;
+   const ph=((c+k*23)/56)%1,yP=soilTop(t)+.6,yH=GLV+9,yD=GLV+4.8;
+   const f=kf([[0,phiT,rT,yH,0,0],[.08,phiT,rT,yH,0,0],[.30,phiP,rP,yH,0,0],[.55,phiP,rP,yP,0,0],[.62,phiP,rP,yP,1,0],[.74,phiP,rP,yP,1,0],[.86,phiP,rP,yH,1,0],[.93,phiT,rT,yH,1,0],[.96,phiT,rT,yD,1,0],[.985,phiT,rT,yD,1,1],[1,phiT,rT,yH,0,0]],ph);
+   const th=Math.acos(clamp(f[1]/40,.25,.95)),Lh=40*Math.cos(th),tipY=3.1+40*Math.sin(th);cr.sw.rotation.y=f[0];cr.bm.rotation.x=-th;
+   const px=.6*Math.cos(f[0])+1.0*Math.sin(f[0]),pz=-.6*Math.sin(f[0])+1.0*Math.cos(f[0]),tx=px+Math.sin(f[0])*Lh,tz=pz+Math.cos(f[0])*Lh,hy=f[2]+3.2;
+   cr.hook.position.set(tx,hy,tz);cr.skip.rotation.z=f[5]*.9;cr.load.visible=f[4]>.5&&f[5]<.5;ropeSet(cr.rope,tx,tipY-.2,hy+.4,tz);});
+  const per=Math.floor(nT/nH);
+  for(let j=0;j<per;j++){const tk=mkDump(),S=stand;
+   const P0=[[S[0],S[1]],[S[0]+1,S[1]+dz*10],[S[0]+4,S[1]+dz*34],[S[0]+7,S[1]+dz*70],[S[0]+11,S[1]+dz*84],[S[0]+16,S[1]+dz*72],[S[0]+14,S[1]+dz*34],[S[0]+12,S[1]+dz*2],[S[0]+11,S[1]-dz*8],[S[0]+5,S[1]-dz*12],[S[0]-1,S[1]-dz*7],[S[0],S[1]-dz*2]];
+   const pa=mkPath(P0,true,3);let dd=0,best=1e9;for(let q=0;q<pa.P.length;q++){const dist=Math.abs(pa.P[q][0]-(S[0]+11))+Math.abs(pa.P[q][1]-(S[1]+dz*84));if(dist<best){best=dist;dd=pa.cum[q];}}
+   addM('Dump trucks (haul)',nT,tk.g,PITWIN.concat(FILLWIN),(c,t)=>{const L=pa.L,v=5.5,TL=30,TD=9,t1=dd/v,t2=(L-dd)/v,per_=TL+t1+TD+t2,tt=((c+(k*per*2+j)*per_/(nH*per)+j*7)%per_+per_)%per_;
+    let d=0,tilt=0,fill=1;if(tt<TL){d=0;fill=tt/TL;}else if(tt<TL+t1){d=dd*smooth((tt-TL)/t1);}else if(tt<TL+t1+TD){d=dd;const u=(tt-TL-t1)/TD;tilt=smooth(u/.45)*(u<.7?1:1-smooth((u-.7)/.3));fill=1-smooth((u-.2)/.5);}else{d=dd+(L-dd)*smooth((tt-TL-t1-TD)/t2);fill=0;}
+    const p=atPath(pa,d),p2=atPath(pa,d+1.5);tk.g.position.set(p.x,GLV,p.z);tk.g.rotation.y=Math.atan2(p2.x-p.x,p2.z-p.z);tk.bed.rotation.x=-tilt*.95;
+    tk.load.scale.y=Math.max(.02,fill*1.6);tk.load.position.y=.25+tk.load.scale.y/2;tk.load.visible=fill>.03;tk.wh.forEach(w=>w.rotation.x=d/.85);dumpUpd(tk,tilt*.95);});}}
+ const ld=mkLoader(),dz=mkDozer(),rl=mkRoller();
+ addM('Wheel loader',1,ld.g,[].concat(PITWIN,FILLWIN),(c,t)=>{const u=c*.07,x=40+16*Math.sin(u),z=-2+14*Math.sin(u*2)*.5,dx=Math.cos(u)*16*.07,dzz=Math.cos(u*2)*14*.07;ld.g.position.set(x,pitY(t),z);ld.g.rotation.y=Math.atan2(dx,dzz);ld.front.rotation.y=.3*Math.sin(u*3);ld.arm.rotation.x=.5*Math.sin(c*.5)-.1;ld.bk.rotation.x=.3*Math.sin(c*.5+1);ld.wh.forEach(w=>w.rotation.x=c*1.6);});
+ addM('Bulldozer',1,dz.g,[].concat(PITWIN,FILLWIN),(c,t)=>{const u=tri(c/26),x=14+u*28;dz.g.position.set(x,pitY(t),-26+Math.sin(c*.03)*3);dz.g.rotation.y=(Math.floor(c/13)%2===0)?Math.PI/2:-Math.PI/2;dz.bl.position.y=Math.sin(c*.5)*.1;});
+ addM('Vibratory roller',1,rl.g,FILLWIN,(c,t)=>{const u=tri(c/20),x=10+u*50;rl.g.position.set(x+0,pitY(t),20);rl.g.rotation.y=(Math.floor(c/10)%2?-1:1)*Math.PI/2;rl.dr.rotation.x=c*2;rl.rr.rotation.x=c*2;rl.dr.position.y=1.0+.015*Math.sin(c*40);});
+})();
+
+/* ======================= D-wall rig + crawler crane + drilling rigs + batching/bentonite yard */
+(function(){
+ const rig=mkDwRig(),cr=mkCrawler();
+ const mainAt=u=>{let k=clamp(Math.floor(u),0,NDW-1),a=k,b=k;while(a>0&&dwOrder[a].fin)a--;b=a+1;while(b<NDW-1&&dwOrder[b].fin)b++;b=Math.min(b,NDW-1);const A=dwOrder[a].p,B=dwOrder[b].p,f=a===b?0:clamp((u-a)/Math.max(1,b-a),0,1);
+  const ang=(p)=>Math.atan2(p.ex,p.ez);return{cx:lerp(A.cx,B.cx,f),cz:lerp(A.cz,B.cz,f),ex:lerp(A.ex,B.ex,f),ez:lerp(A.ez,B.ez,f)};};
+ const frame=t=>{const u=P('S215',t)>0?NRING+P('S215',t)*NRAMPP:P('S210',t)*NRING;const m=mainAt(u);const L=Math.hypot(m.ex,m.ez)||1,ex=m.ex/L,ez=m.ez/L;const inx=-ez,inz=ex;return{cx:m.cx,cz:m.cz,ex,ez,inx,inz,yaw:Math.atan2(inx,inz)};};
+ addM('D-wall rig (hydromill)',1,rig.g,['S210','S215'],(c,t)=>{const f=frame(t);rig.g.position.set(f.cx-f.inx*6.0,GLV,f.cz-f.inz*6.0);rig.g.rotation.y=f.yaw;
+  const ph=(c/22)%1,dep=ph<.5?smooth(ph/.5):smooth((1-ph)/.5);rig.cutter.position.y=0.5-dep*28.8;
+  rig.wl.forEach((w,i)=>w.rotation.z=(i?-1:1)*c*3.5*(dep>.03&&dep<.97?1:.15));
+  const ctop=rig.cutter.position.y+9.6,mtop=38.4;rig.rope.position.set(0,(mtop+ctop)/2,6.0);rig.rope.scale.set(.1,Math.max(.2,mtop-ctop),.1);rig.hose.position.set(.7,(mtop+ctop)/2,6.0);rig.hose.scale.set(.2,Math.max(.2,mtop-ctop),.2);});
+ addM('Crawler crane (cages, tremie)',1,cr.g,['S210','S215'],(c,t)=>{const f=frame(t);cr.g.position.set(f.cx-f.inx*6.5-f.ex*17,GLV,f.cz-f.inz*6.5-f.ez*17);cr.g.rotation.y=f.yaw;
+  const ph=(c/36)%1,th=1.1,Lh=40*Math.cos(th),tipY=3.1+40*Math.sin(th);
+  const k=kf([[0,-2.06,.3],[.12,-2.06,5],[.38,1.2,5],[.72,1.2,-27.5],[.8,1.2,-27.5],[.84,1.2,5],[.92,1.2,5],[1,-2.06,.3]],ph);const phi=k[0];
+  cr.sw.rotation.y=phi;cr.bm.rotation.x=-th;const px=.6*Math.cos(phi)+1.0*Math.sin(phi),pz=-.6*Math.sin(phi)+1.0*Math.cos(phi);
+  const tipX=px+Math.sin(phi)*Lh,tipZ=pz+Math.cos(phi)*Lh,hookY=k[1]+30.5;cr.hook.position.set(tipX,hookY,tipZ);cr.cage.position.y=-.5;cr.cage.visible=(ph<.8||ph>.995);
+  ropeSet(cr.rope,tipX,tipY-.2,hookY+.4,tipZ);});
+ const dr=[mkDrill(),mkDrill()];
+ dr.forEach((d,k)=>addM('Water-well drilling rigs',EQN.drills||2,d.g,['S310'],(c,t)=>{const nW=wellPts.length,i=clamp(Math.floor(P('S310',t)*nW)+k*Math.floor(nW/2),0,nW-1)%nW;const w=wellPts[i];d.g.position.set(w[0]+(w[0]>36?4:-4),GLV,w[1]);d.g.rotation.y=w[0]>36?-Math.PI/2:Math.PI/2;d.head.position.y=6+Math.sin(c*.8+k)*4;d.rod.position.y=6+Math.sin(c*.8+k)*4-6;d.rod.rotation.y=c*8;}));
+ const st=group('batch'),sg=new THREE.Group();st.add(sg);const sb=PBLD();
+ [[-34,-58],[-29,-58]].forEach(a=>{sb.cyl(2.4,7,a[0],GLV+3.5,a[1],K.cncr).cone(2.4,1.6,a[0],GLV+7.8,a[1],K.cncr);});sb.box(7,3,4,-22,GLV+1.5,-58,K.blu).box(5,2.6,3,-40,GLV+1.3,-58,K.grey);for(let i=0;i<6;i++)sb.box(.6,.6,30,-38+i*1.5,GLV+.5,-70,K.org);
+ [-84,-78,-72].forEach(x=>sb.cyl(3,14,x,GLV+7,-6,K.cncr).cone(3,2.4,x,GLV+15,-6,K.cncr));sb.box(10,4,6,-78,GLV+2,6,K.grey).box(12,3,3,-78,GLV+8,-8,K.yel).box(3,5,10,-70,GLV+2.5,-0,K.grey);sg.add(sb.build());
+ sg.add(label('BATCHING PLANT (company, schematic)',V(-78,GLV+19,0),{size:2.3,bg:'rgba(120,70,0,.92)'}));sg.add(label('BENTONITE PLANT + CAGE YARD',V(-32,GLV+11,-62),{size:2.3,bg:'rgba(120,70,0,.92)'}));
+})();
+
+/* ======================= concrete pumps + mixers */
+(function(){
+ const POURS=['B110','B230','WA1P','WB1P','WA2P','WB2P','WA3P','WB3P','B430','P130','P230','P330'];
+ const activePour=t=>POURS.find(id=>{const a=BY[id];return a&&t>=a.s&&t<=a.f;});
+ const target=(id,p)=>{if(id==='B110')return{x:lerp(3,68,p),y:PB+.2,z:0};if(id==='B230')return{x:lerp(3,68,p),y:RB+.6,z:0};
+  const k=+id[2];if(id[0]==='W'&&id[1]==='A')return{x:5.5,y:RT+HL*(k-.5),z:lerp(-30,30,p)};if(id[0]==='W')return{x:lerp(19,68,p),y:RT+HL*(k-.5),z:lerp(-17,17,p)};
+  if(id==='B430')return{x:lerp(2,68,p),y:4.2,z:0};const lv=+id[1];return{x:XB,y:lv===1?8:(lv===2?12:16),z:lerp(-33,33,p)};};
+ const nP=Math.min(EQN.pumps||3,3),pumpXZ=(tg,k)=>{const side=tg.z<=0?-1:1;return{xp:clamp(tg.x+k*14,-8,side<0?62:92),side};};
+ for(let k=0;k<2;k++){const pm=mkPump();
+  addM('Boom concrete pumps',nP,pm.g,t=>{const id=activePour(t);return !!id&&(k===0||/^(B230|W|B430)/.test(id));},(c,t)=>{const id=activePour(t);if(!id)return;const tg=target(id,P(id,t));const{xp,side}=pumpXZ(tg,k);
+   pm.g.position.set(side<0?Math.min(xp,64):xp,GLV,side*49);pm.g.rotation.y=0;pm.g.updateMatrixWorld(true);
+   const O=[0,3.7,-1.2],Tg=[tg.x-xp+k*1.5,tg.y-GLV,tg.z-side*49];const dist=Math.hypot(Tg[0],Tg[2]);const apex=Math.max(O[1],Tg[1])+5+dist*.22;const Cy=2*apex-(O[1]+Tg[1])/2;
+   const pt=(u)=>[lerp(lerp(O[0],(O[0]+Tg[0])/2,u),lerp((O[0]+Tg[0])/2,Tg[0],u),u),(1-u)*(1-u)*O[1]+2*(1-u)*u*Cy+u*u*Tg[1],lerp(lerp(O[2],(O[2]+Tg[2])/2,u),lerp((O[2]+Tg[2])/2,Tg[2],u),u)];
+   const J=[0,1,2,3,4].map(i=>pt(i/4));pm.seg.forEach((s,i)=>{const a=J[i],b=J[i+1];s.position.set((a[0]+b[0])/2,(a[1]+b[1])/2,(a[2]+b[2])/2);s.scale.set(.8-.1*i,.8-.1*i,Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]));s.lookAt(new THREE.Vector3(b[0],b[1],b[2]).add(pm.g.position));});
+   pm.joints.forEach((j,i)=>{j.position.set(J[i][0],J[i][1],J[i][2]);j.scale.set(.55,1.1,.55);});
+   const end=J[4];pm.hose.scale.set(.22,Math.max(.1,end[1]-Tg[1]+.5),.22);pm.hose.position.set(end[0],(end[1]+Tg[1])/2,end[2]);});}
+ const nM=EQN.mixers||8,shown=Math.min(nM,6);
+ for(let i=0;i<shown;i++){const mx=mkMixer();
+  addM('Mixer trucks',nM,mx.g,t=>!!activePour(t),(c,t)=>{const id=activePour(t);if(!id)return;const tg=target(id,P(id,t)),{xp,side}=pumpXZ(tg,0);
+   const pts=[[-76,0],[-60,0],[-60,side*58],[xp+0,side*58],[xp,side*56]],pa=mkPath(pts,false),sp=6.5,wait=22,L=pa.L,leg=L/sp,per_=2*leg+wait*2;let tt=(c+i*per_/shown)%per_;let d,fwd=true;
+   if(tt<leg){d=L*smooth(tt/leg);}else if(tt<leg+wait){d=L;}else if(tt<2*leg+wait){d=L*(1-smooth((tt-leg-wait)/leg));fwd=false;}else{d=0;fwd=false;}
+   const p=atPath(pa,d),p2=atPath(pa,d+(fwd?1.5:-1.5)),dump=tt>=leg&&tt<leg+wait;
+   mx.g.position.set(p.x,GLV,p.z);mx.g.rotation.y=Math.atan2(p2.x-p.x,p2.z-p.z);if(dump)mx.g.rotation.y=side<0?Math.PI:0;mx.drum.rotation.y=0;mx.dm.rotation.y=c*(dump?2.2:.9);mx.wh.forEach(w=>w.rotation.x=d/.65);});}
+})();
+
+/* ======================= cranes */
+(function(){
+ const nT=EQN.towers||2,spots=[[-16,-20,-26,-6],[86,42,76,52]];
+ const win=t=>{const a=BY['B210'],b=BY['TC10'];return !!a&&!!b&&t>=a.s&&t<=b.s;};
+ const siteH=t=>{const a=BY['B210'],b=BY['P330'];return lerp(RT+2,17.3,clamp((t-a.s)/(b.f-a.s),0,1));};
+ for(let i=0;i<Math.min(nT,2);i++){const tc=mkTower(),sp=spots[i];
+  addM('Tower cranes (52 m jib)',nT,tc.g,win,(c,t)=>{tc.g.position.set(sp[0],GLV,sp[1]);const period=46,ph=((c+i*17)/period)%1,cyc=Math.floor((c+i*17)/period);
+   const siteX=34+24*Math.sin(cyc*2.1+i*1.4),siteZ=-14*Math.sin(cyc*1.7)+i*8,sy=siteH(t)+3-GLV;
+   const ang=(x,z)=>-Math.atan2(z-sp[1],x-sp[0]),rad=(x,z)=>clamp(Math.hypot(x-sp[0],z-sp[1]),8,50);
+   const A=[ang(sp[2],sp[3]),rad(sp[2],sp[3])],B=[ang(siteX,siteZ),rad(siteX,siteZ)],hi=Math.max(16,sy+8);
+   const f=kf([[0,A[0],A[1],3,1],[.1,A[0],A[1],3,1],[.2,A[0],A[1],hi,1],[.45,B[0],B[1],hi,1],[.62,B[0],B[1],sy,1],[.7,B[0],B[1],sy,0],[.78,B[0],B[1],hi,0],[.94,A[0],A[1],hi,0],[1,A[0],A[1],3,1]],ph);
+   tc.sl.rotation.y=f[0];tc.tr.position.x=f[1];const drop=Math.max(2.5,tc.H+.6-f[2]);tc.rope.scale.y=drop;tc.rope.position.y=-drop/2;tc.blk.position.y=-drop;tc.load.visible=f[3]>.5;});}
+ const mc=mkMobile();
+ addM('Mobile crane 100 t',EQN.mobile||1,mc.g,['EQ110','EQ120','EQ130','EQ140'],(c,t)=>{mc.g.position.set(-16,GLV,10);mc.g.rotation.y=Math.PI/2;const k=kf([[0,.2,1.12,10],[.3,.2,1.12,10],[.5,-.25,1.0,20],[.75,-.25,1.0,20],[1,.2,1.12,10]],(c/40)%1);
+  mc.sw.rotation.y=k[0];mc.bm.rotation.x=-k[1];const L=32,tipF=Math.cos(k[1])*L,tipY=3.8+Math.sin(k[1])*L;const wx=Math.sin(k[0])*tipF,wz=-2.4+Math.cos(k[0])*tipF;mc.hook.position.set(wx,tipY-k[2],wz);ropeSet(mc.rope,wx,tipY,tipY-k[2]+.4,wz);});
+})();
+const PUMPSEC={on:true,active:false,snap:false};
+function pumpSection(t){const ea=BY['EQ130'];const act=PUMPSEC.on&&!!ea&&t>=ea.s&&t<=ea.f;
+ if(act){const c=pumpClock(t),z=PZ[c.i];planes.p.normal.set(0,0,-1);planes.p.constant=z+.32;
+  if(!PUMPSEC.active){PUMPSEC.active=true;PUMPSEC.snap=true;orb.th=.32;orb.ph=1.3;orb.r=33;}
+  if(PUMPSEC.snap){orb.t.set(PX+1.6,3.2,z);PUMPSEC.snap=false;}else orb.t.set(lerp(orb.t.x,PX+1.6,.2),lerp(orb.t.y,3.2,.2),lerp(orb.t.z,z,.2));cam();updPlanes();}
+ else if(PUMPSEC.active){PUMPSEC.active=false;updPlanes();}}
+function syncMach(t){MACH.forEach(m=>{m.on=winOn(m.win,t);});syncRamp(t);}
+function animMach(clock,t){let any=false;MACH.forEach(m=>{const vis=m.on&&LAYER.machines;m.g.visible=vis;if(vis){any=true;m.upd(clock,t);}});syncRamp(t);return any;}
+
+
+/* ------------------------------------------------------------ annotations */
+const gRuler=group('ruler'), gLv=group('levels'), gDim=group('dims'), gLab=group('labels'), gGrid=group('grid');
+(function(){const xr=-14,zr=-46;gRuler.add(lineObj([V(xr,-29,zr),V(xr,19.5,zr)],0x10263A));
+ LV.forEach((l,i)=>{const y=l[0],side=i%2?1:-1;gRuler.add(lineObj([V(xr-1.2,y,zr),V(xr+1.2,y,zr)],0x10263A));gRuler.add(label((y>=0?'+':'')+y.toFixed(y===Math.round(y)?1:2)+'  '+l[1],V(xr+side*13,y,zr),{size:2.1,bg:'rgba(16,38,58,.92)'}));});
+ LV.filter(l=>[17.3,13.43,10.9,8.8,6.7,4.0,0.39,-4.27,-8.5,-11.0].includes(l[0])).forEach(l=>{const y=l[0];const pts=[V(-8,y,-40),V(80,y,-40),V(80,y,40),V(-8,y,40),V(-8,y,-40)];gLv.add(lineObj(pts,y>0?0x587B88:0x7A5A2F,true));gLv.add(label((y>=0?'+':'')+y.toFixed(2),V(80,y,40),{size:2.6,bg:'rgba(46,125,154,.92)'}));});
+ // dimensions
+ const dz=4.15;
+ dim(gDim,V(-3,dz,-32.95),V(-3,dz,32.95),'65.90 m  west face (19 bays x 3.10 + 2 x 3.00 + 1.00)',0xCCAE81,V(-9,0,0),2.4);
+ dim(gDim,V(75,dz,-20.625),V(75,dz,20.625),'41.25 m  east block width',0xCCAE81,V(7,0,0),2.4);
+ dim(gDim,V(45.4,dz,24),V(71.3,dz,24),'25.90 m  east block length',0xCCAE81,V(0,0,3),2.4);
+ dim(gDim,V(0,dz,-40),V(71.3,dz,-40),'≈ 71.3 m  overall length (scaled)',0xCCAE81,V(0,0,-3.5),2.4);
+ dim(gDim,V(16,dz,-37),V(45.4,dz,-37),'≈ 29.4 m  wing walls (6 CF each, 5.40 m)',0xCCAE81,V(0,0,-3),2.3);
+ dim(gDim,V(XA,18.9,-34.475),V(XA,18.9,34.475),'68.95 m  pump hall (6.825 + 9 x 6.200 + 6.325)',0x6A9AAC,V(-2,1.6,0),2.4);
+ dim(gDim,V(XA,18.9,36.5),V(XC,18.9,36.5),'14.75 m  hall width (7.515 + 7.235)',0x6A9AAC,V(0,1.6,2.5),2.4);
+ dim(gDim,V(5.5,5.2,-27.9),V(5.5,5.2,-24.8),'3.10 m  pump pitch',0x6A9AAC,V(0,2.2,0),2.1);
+ dim(gDim,V(1,-9.0,34.5),V(10,-9.0,34.5),'9.00 m  fin length',0xCCAE81,V(0,-1.6,2.4),2.1);
+ dim(gDim,V(-6,RT,0),V(-6,WT,0),'11.50 m  wall height (-8.50 to +3.00)',0x6A9AAC,V(-9,0,0),2.3);
+ dim(gDim,V(-6,RB,6),V(-6,RT,6),'1.20 m  raft',0x6A9AAC,V(-6,0,0),2.1);
+ dim(gDim,V(-10,FM,-8),V(-10,GLV,-8),'14.70 m  excavation depth (+3.70 to -11.00)',0xCCAE81,V(-10,0,0),2.3);
+ dim(gDim,V(-20,-28.3,-12),V(-20,GLV,-12),'32.0 m  D-wall depth (0.8 m thick, panel 2.8 m)',0x5B8D8D,V(-12,0,0),2.3);
+ dim(gDim,V(81,ST,-6),V(81,17.3,-6),'13.30 m  hall height (+4.00 to +17.30)',0x6A9AAC,V(7,0,0),2.3);
+ dim(gDim,V(81,FM,6),V(81,18.6,6),'29.60 m  total (-11.00 to +18.60)',0x6A9AAC,V(8,0,0),2.3);
+ // labels
+ const L=(t,x,y,z,s)=>gLab.add(label(t,V(x,y,z),{size:s||2.7,bg:'rgba(31,102,114,.92)'}));
+ L('SOIL HOISTING: 2 crawler cranes + skips (no ramp)',84,14,0);L('PUMP BAYS x19 (fins, EL -8.5 to +3.0)',5,-4,-38);L('WING WALLS + CF-1…12',31,4.8,-31);L('SCREEN CHANNELS x6',58,7.5,-26);L('PUMP HALL – roof +17.3',(XA+XC)/2,21.2,22);
+ L('RAFT EL -8.50 (1.2 m)',36,-9.3,30);L('TOP SLAB +4.00',8,4.4,-37.4);L('D-WALL 0.8 x 32 m',-9,GLV+2,-40);L('DEWATERING WELLS x'+D.q.wells,-8,6.5,28);L('INTAKE DN2000 (marine)',84,-4,0);
+ L('≈ footprint '+fmt(Math.abs(polyArea(FOOT)))+' m²',36,-3,-22);
+ // grid
+ const gh=new THREE.GridHelper(400,40,0x7A8B99,0x9FB0BE);gh.position.set(70,GLV+0.02,0);gGrid.add(gh);})();
+
+/* ------------------------------------------------------------ section planes + layer ui */
+const planes={p:new THREE.Plane(new THREE.Vector3(0,0,-1),0),z:new THREE.Plane(new THREE.Vector3(0,0,-1),0),x:new THREE.Plane(new THREE.Vector3(1,0,0),0),y:new THREE.Plane(new THREE.Vector3(0,-1,0),0)};
+function updPlanes(){const act=[];
+ if($('cz').checked){const v=+$('cz_v').value,f=$('cz_f').checked;planes.z.normal.set(0,0,f?1:-1);planes.z.constant=f?-v:v;act.push(planes.z);}
+ if($('cx').checked){const v=+$('cx_v').value,f=$('cx_f').checked;planes.x.normal.set(f?-1:1,0,0);planes.x.constant=f?v:-v;act.push(planes.x);}
+ if($('cy').checked){const v=+$('cy_v').value,f=$('cy_f').checked;planes.y.normal.set(0,f?1:-1,0);planes.y.constant=f?-v:v;act.push(planes.y);}
+ if(PUMPSEC.active)act.push(planes.p);renderer.clippingPlanes=act;dirty=true;}
+['cz','cz_v','cz_f','cx','cx_v','cx_f','cy','cy_v','cy_f'].forEach(id=>$(id).addEventListener('input',updPlanes));
+(function(){const box=$('layers');
+ const sd=ids=>{const a=(ids||[]).map(x=>BY[x]).filter(Boolean);return a.length?[Math.min(...a.map(x=>x.s)),Math.max(...a.map(x=>x.f))]:null;};
+ const W=Object.keys(BY).filter(k=>/^W[AB]\d[PR]$/.test(k)||k==='B300');
+ const G=[['1.1  Shoring and excavation (temporary works)',true,[['dwall','D-wall, guide walls, capping beam',['S130','S210','S220']],['tfin','T-fins (placeholder, off)',['S210']],['wells','Dewatering wells and header',['S310','S320']],['soil','Soil in the pit (excavation benches)',['S410','S420','S430','S440']]]],
+  ['1.2  Building (permanent works)',true,[['sub','Replacement fill, blinding, raft',['S510','B110','B120','B210','B220','B230']],['walls','Walls, fins, piers, counterforts',W],['slab','Top slab and falsework',['B410','B420','B430']],['backfill','Structural backfill',['B520']],['frame','Frame: columns, beams, roof slab',['P110','P120','P130','P210','P230','P310','P330']],['cmu','CMU walls and parapet',['AR110','AR120']],['finish','Louvres, windows, doors, roof layers',['AR130','AR150','AR160','AR170','AR510','AR520','AR530','AR540']],['equip','Crane, pumps, screens, stop logs, gates',['EQ110','EQ120','EQ130','EQ140']],['hvac','HVAC: roof fans EXF-01, louvres FAL-01',['MS110','MS120']],['mep','Electrical, MEP, I&C, roof equipment',['EL110','EL130','IC110','IC210','IC220','IC250','AR550']]]],
+  ['Site equipment',false,[['machines','Construction equipment (animated)',['S110','S210','S310','S410','B230','P110','EQ110']],['batch','Batching plant, bentonite and cage yard',['S110']]]],
+  ['Context',false,[['ground','Ground plate',null],['soilblock','Surrounding soil block',null],['water','Groundwater and flooding',null],['ctx2','Intake pipelines (marine WBS)',['B520']]]],
+  ['Annotations',false,[['ruler','Level ruler',null],['levels','Level planes',null],['dims','Dimensions',null],['labels','Labels',null],['mlabels','Equipment labels',null],['grid','Grid',null]]]];
+ let html='',n=0;G.forEach((g,gi)=>{const rows=g[2].map(r=>({k:r[0],l:r[1],ids:r[2],se:sd(r[2])}));if(g[1])rows.sort((a,b)=>a.se[0]-b.se[0]);
+  html+='<div class="lg"><span>'+g[0]+'</span><span><button data-all="'+gi+'|1">all</button> <button data-all="'+gi+'|0">none</button></span></div>';
+  rows.forEach(r=>{n++;const dt=r.se?mLab(mOf(r.se[0]))+(mOf(r.se[1])!==mOf(r.se[0])?'–'+mLab(mOf(r.se[1])):''):'';
+   html+='<div class="lr"><input type="checkbox" data-l="'+r.k+'"'+(LAYER[r.k]?' checked':'')+'><span class="ln">'+(g[1]?n+'. ':'')+r.l+'</span><span class="ld">'+dt+'</span><button data-solo="'+r.k+'" title="Show only this element group">◎</button><button data-go="'+(r.se?r.se[0]:'')+'" title="Jump to the start of this element">⏱</button></div>';});});
+ box.innerHTML=html;
+ box.addEventListener('change',e=>{const k=e.target.getAttribute('data-l');if(!k)return;LAYER[k]=e.target.checked;applyLayers();});
+ box.addEventListener('click',e=>{const t=e.target;if(t.hasAttribute('data-solo')){const k=t.getAttribute('data-solo');G.slice(0,3).forEach(g=>g[2].forEach(r=>LAYER[r[0]]=false));LAYER[k]=true;LAYER.ground=true;syncLayerUI();}
+  else if(t.hasAttribute('data-go')){const v=t.getAttribute('data-go');if(v!==''){playing=false;$('play').textContent='▶ Play';setTime(+v);}}
+  else if(t.hasAttribute('data-all')){const[gi,on]=t.getAttribute('data-all').split('|');G[+gi][2].forEach(r=>LAYER[r[0]]=on==='1'&&r[0]!=='tfin'&&r[0]!=='soilblock'&&r[0]!=='levels');syncLayerUI();}});})();
+function applyLayers(){if(typeof animMach==='function')animMach(CLK.v,T);ELS.forEach(e=>{e.mesh.visible=e.show&&LAYER[e.layer];if(e.auxList)e.auxList.forEach(a=>a.visible=!!a.userData.on&&!!LAYER[e.layer]);});Object.keys(layerObjs).forEach(k=>layerObjs[k].forEach(g=>g.visible=!!LAYER[k]));dirty=true;}
+LAYER.mlabels=false;LAYER.ruler=false;LAYER.levels=false;LAYER.dims=false;LAYER.labels=false;LAYER.grid=true;
+
+/* ------------------------------------------------------------ camera / orbit */
+const orb={t:new THREE.Vector3(48,-1,-10),r:165,th:-0.75,ph:1.0};
+const PRE={iso:[-0.75,1.0,165],plan:[0,0.02,210],south:[0,1.5,125],north:[Math.PI,1.5,125],east:[Math.PI/2,1.5,125],west:[-Math.PI/2,1.5,125],under:[-0.75,2.5,135]};
+function cam(){const s=Math.sin(orb.ph),c=Math.cos(orb.ph);camera.position.set(orb.t.x+orb.r*s*Math.sin(orb.th),orb.t.y+orb.r*c,orb.t.z+orb.r*s*Math.cos(orb.th));camera.lookAt(orb.t);dirty=true;}
+const XR=['concrete','raft','slabMat','cmu','plaster','paint','replace','plain','roofS','roofW','roofI','roofT','louvre','green','door','rollup','backfill','dwall','guide','soil','ground','membrane'];
+function setXray(on){XR.forEach(k=>{const m=MAT[k];if(m._o===undefined)m._o=[m.transparent,m.opacity];m.transparent=on||m._o[0];m.opacity=on?0.13:m._o[1];m.depthWrite=!on;m.needsUpdate=true;});EDGE.opacity=on?0.12:0.35;dirty=true;}
+function syncLayerUI(){document.querySelectorAll('[data-l]').forEach(c=>{c.checked=!!LAYER[c.getAttribute('data-l')];});applyLayers();}
+function cutOff(){['cz','cx','cy'].forEach(i=>$(i).checked=false);updPlanes();}
+function closeUp(){['dims','ruler','labels','levels','water','soilblock','mlabels'].forEach(k=>LAYER[k]=false);syncLayerUI();}
+function look(tx,ty,tz,r,th,ph){orb.t.set(tx,ty,tz);orb.r=r;orb.th=th;orb.ph=ph;cam();}
+const BTN2=[['Pumps',()=>{setXray(true);closeUp();look(0,5,0,46,-1.15,1.1);}],['Pump section',()=>{setXray(false);closeUp();$('cz').checked=true;$('cz_f').checked=false;$('cz_v').value=0.0;updPlanes();look(-1,3,0,38,0,1.5);}],['Screens + stop logs',()=>{setXray(false);closeUp();$('cz').checked=true;$('cz_f').checked=false;$('cz_v').value=3.4;updPlanes();look(60,-1,3.4,52,0,1.5);}],['HVAC',()=>{setXray(false);closeUp();look(2,12,0,66,0.9,0.85);}],
+ ['X-ray',()=>{setXray(!MAT.concrete.transparent||MAT.concrete.opacity>.5);}],['Mechanical focus',()=>{setXray(true);['dwall','tfin','wells','soil','ground','soilblock','water','backfill','cmu','finish','mep','levels'].forEach(k=>LAYER[k]=false);['walls','sub','slab','frame','equip','hvac','mlabels'].forEach(k=>LAYER[k]=true);syncLayerUI();setTime(END);}],
+ ['Equipment motion: on',function(){ANIM=!ANIM;this.textContent='Equipment motion: '+(ANIM?'on':'off');}],['Finishes',function(){setXray(false);closeUp();const a=BY['AR110'];$('speed').value='1';setTime(a.s);look(XA,9,0,78,-1.45,1.25);playing=true;$('play').textContent='❚❚ Pause';lastTs=0;}],['Roof & MEP',function(){setXray(false);closeUp();setTime(END);look(2,17.5,0,62,-0.75,0.95);}],['Pump installation',function(){PUMPSEC.on=true;const ea=BY['EQ130'];$('speed').value='0.5';setTime(ea.s+.2);playing=true;$('play').textContent='❚❚ Pause';lastTs=0;}],['Auto pump section: on',function(){PUMPSEC.on=!PUMPSEC.on;this.textContent='Auto pump section: '+(PUMPSEC.on?'on':'off');if(!PUMPSEC.on){PUMPSEC.active=false;updPlanes();}else pumpSection(T);}],['Show all',()=>{setXray(false);cutOff();LDEF.forEach(l=>{if(l.length>2)LAYER[l[0]]=!!l[2];});LAYER.levels=false;LAYER.mlabels=true;syncLayerUI();}]];
+(function(){const T=$('tools');[['iso','Iso'],['plan','Plan'],['south','South'],['north','North'],['east','East'],['west','West'],['under','Below']].forEach(p=>{const b=document.createElement('button');b.className='btn';b.textContent=p[1];b.onclick=()=>{const v=PRE[p[0]];orb.th=v[0];orb.ph=v[1];orb.r=v[2];orb.t.set(36,p[0]==='south'||p[0]==='north'||p[0]==='east'||p[0]==='west'?4:-2,0);cam();};T.appendChild(b);});BTN2.forEach(b=>{const e=document.createElement('button');e.className='btn';e.textContent=b[0];e.onclick=function(){b[1].call(e);};T.appendChild(e);});})();
+const ptrs=new Map();let last=null,moved=0,downPos=null;
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});downPos={x:e.clientX,y:e.clientY};moved=0;});
+canvas.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;moved+=Math.abs(dx)+Math.abs(dy);
+ if(ptrs.size===1){if((e.buttons&2)||e.shiftKey||(e.buttons&4)){pan(dx,dy);}else{orb.th-=dx*0.006;orb.ph=clamp(orb.ph-dy*0.006,0.02,3.1);cam();}}
+ else if(ptrs.size===2){const ids=[...ptrs.keys()];const o=ptrs.get(ids[0]===e.pointerId?ids[1]:ids[0]);const d0=Math.hypot(p.x-o.x,p.y-o.y),d1=Math.hypot(e.clientX-o.x,e.clientY-o.y);orb.r=clamp(orb.r*d0/Math.max(d1,1),8,1200);pan(dx/2,dy/2);}
+ p.x=e.clientX;p.y=e.clientY;});
+function pan(dx,dy){const k=orb.r*0.0016;const right=new THREE.Vector3().setFromMatrixColumn(camera.matrix,0),up=new THREE.Vector3().setFromMatrixColumn(camera.matrix,1);orb.t.addScaledVector(right,-dx*k).addScaledVector(up,dy*k);cam();}
+canvas.addEventListener('pointerup',e=>{ptrs.delete(e.pointerId);if(moved<6&&downPos)pick(e);});
+canvas.addEventListener('pointercancel',e=>ptrs.delete(e.pointerId));
+canvas.addEventListener('wheel',e=>{e.preventDefault();orb.r=clamp(orb.r*Math.exp(e.deltaY*0.0012),8,1200);cam();},{passive:false});
+
+/* picking */
+const ray=new THREE.Raycaster();let selBox=null,selEl=null;
+function pick(e){const r=canvas.getBoundingClientRect();const m=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);ray.setFromCamera(m,camera);
+ const list=PICK.filter(p=>p.visible);const hit=ray.intersectObjects(list,true).filter(h=>h.object.isMesh&&renderer.clippingPlanes.every(q=>q.distanceToPoint(h.point)>=0))[0];
+ if(selBox){scene.remove(selBox);selBox=null;}
+ if(!hit){selEl=null;$('sel').innerHTML='<span class="note">Click any element in the 3D view.</span>';dirty=true;return;}
+ let top=hit.object;while(top&&!top.userData.el)top=top.parent;if(!top){return;}selEl=top.userData.el;selBox=new THREE.BoxHelper(top,0xE0D39D);scene.add(selBox);showSel();dirty=true;}
+function showSel(){const el=selEl;if(!el)return;const id=el.reveal||(el.mesh.userData.act);const a=id&&BY[id];
+ let h='<b>'+el.name+'</b>';
+ if(a){h+='<table><tr><td>Activity</td><td>'+a.id+' – '+a.name+'</td></tr><tr><td>WBS</td><td>'+a.wbs+'</td></tr><tr><td>Starts</td><td>'+a.ms+' (day '+fmt(a.s)+')</td></tr><tr><td>Finishes</td><td>'+a.mf+' (day '+fmt(a.f)+')</td></tr><tr><td>Duration</td><td>'+fmt(a.dur)+' days</td></tr>'+
+  (a.qty!=null?'<tr><td>Quantity</td><td>'+fmt(a.qty)+' '+a.unit+'</td></tr>':'')+(a.prod?'<tr><td>Productivity</td><td>'+(a.prod<10?a.prod.toFixed(2):fmt(a.prod))+' per crew-shift × '+(a.crews||1)+' crews</td></tr>':'')+'<tr><td>Direct men</td><td>'+fmt(a.men)+'</td></tr>'+
+  '<tr><td>Progress now</td><td>'+Math.round(P(a.id,T)*100)+'%</td></tr></table>';}
+ else h+='<div class="note">Context element, not linked to an activity.</div>';$('sel').innerHTML=h;}
+
+/* ------------------------------------------------------------ time model + UI */
+let T=END, playing=false, lastTs=0, uiAcc=0;
+const msel=$('msel'), dayEl=$('day'); dayEl.max=END;
+const nMon=Math.ceil(END/MD);for(let i=0;i<nMon;i++){const o=document.createElement('option');o.value=i;o.textContent=mLab(SM+i);msel.appendChild(o);}
+const TOT_MD=ACTS.filter(a=>a.id!=='S340').reduce((s,a)=>s+a.men*(a.f-a.s+1),0);
+function mdTo(t){let s=0;ACTS.forEach(a=>{if(a.id==='S340')return;const d=a.f-a.s+1;s+=a.men*clamp(t-a.s+1,0,d);});return s;}
+const GROUPS=[['Shoring and excavation',/^S/],['Substructure',/^(B|W)/],['Superstructure',/^P/],['Architecture',/^AR/],['Equipment',/^EQ/],['Electrical, MEP, I&C',/^(EL|MS|IC)/],['Testing and flooding',/^TC/]];
+const TOT={conc:ACTS.reduce((s,a)=>s+a.conc,0),rebar:ACTS.reduce((s,a)=>s+a.rebar,0),exc:ACTS.reduce((s,a)=>s+a.exc,0)};
+function setTime(t,fromSlider){T=clamp(t,0,END);ELS.forEach(e=>updEl(e,T));syncMach(T);animMach(CLK.v,T);pumpSection(T);if(selBox)selBox.update();if(selEl)showSel();
+ const d=Math.max(T,1);dayEl.value=T;msel.value=clamp(Math.floor((d-1)/MD),0,nMon-1);
+ $('tbadge').textContent=(T<1?'Before start':mLab(mOf(d))+' · day '+fmt(Math.ceil(T)))+' / '+fmt(END);
+ uiNow(true);drawGantt();drawHist();dirty=true;}
+let uiT=0;
+function uiNow(force){const now=performance.now();if(!force&&now-uiT<140)return;uiT=now;const t=T;
+ let men=0,conc=0,reb=0,exc=0;const act=[];
+ ACTS.forEach(a=>{const p=P(a.id,t);conc+=a.conc*p;reb+=a.rebar*p;exc+=a.exc*p;if(t>=a.s&&t<=a.f&&a.dur>0){men+=a.men;act.push([a,p]);}});
+ const prog=mdTo(t)/TOT_MD;
+ const k=[[T<1?'–':mLab(mOf(Math.max(t,1))),'Project month'],[Math.round(prog*100)+'%','Labour-weighted progress'],[fmt(men),'Direct men now'],[fmt(conc),'m³ concrete to date (of '+fmt(TOT.conc)+')'],[fmt(reb),'t steel to date (of '+fmt(TOT.rebar)+')'],[fmt(exc),'m³ excavated (of '+fmt(TOT.exc)+')']];
+ $('kpis').innerHTML=k.map(x=>'<div class="kpi"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>').join('');
+ $('phases').innerHTML=GROUPS.map(g=>{let n=0,dd=0;ACTS.forEach(a=>{if(a.id==='S340'||!g[1].test(a.id))return;const w=Math.max(a.men,0.5)*(a.f-a.s+1);n+=w*P(a.id,t);dd+=w;});const v=dd?n/dd:0;return'<div class="row"><span>'+g[0]+'</span><span style="text-align:right">'+Math.round(v*100)+'%</span><div class="bar"><i style="width:'+(v*100)+'%"></i></div></div>';}).join('');
+ act.sort((a,b)=>b[0].men-a[0].men);
+ {const gm={};MACH.forEach(m=>{if(m.on&&LAYER.machines){gm[m.label]=gm[m.label]||{n:0,tot:m.total};gm[m.label].n++;}});$('mnow').innerHTML=Object.keys(gm).length?Object.keys(gm).map(k=>'<div class="act"><div class="t"><span>'+k+'</span><span>'+gm[k].n+(gm[k].tot>gm[k].n?' of '+gm[k].tot:'')+'</span></div></div>').join(''):'<span class="note">No site equipment scheduled on this day.</span>';}
+ $('active').innerHTML=act.length?act.slice(0,9).map(x=>'<div class="act"><div class="t"><span>'+x[0].name+'</span><span>'+Math.round(x[1]*100)+'%</span></div><div class="bar"><i style="width:'+(x[1]*100)+'%"></i></div></div>').join('')+(act.length>9?'<div class="note">+ '+(act.length-9)+' more activities</div>':''):'<span class="note">No activity running on this day.</span>';}
+
+/* canvases */
+function sizeCv(c){const r=c.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,2);const w=Math.max(10,Math.round(r.width*dpr)),h=Math.max(10,Math.round(r.height*dpr));if(c.width!==w||c.height!==h){c.width=w;c.height=h;}return{w,h,dpr};}
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+let ganttGeo=null;
+function drawGantt(){const c=$('gantt'),{w,h,dpr}=sizeCv(c),x=c.getContext('2d');x.clearRect(0,0,w,h);const rows=D.rows,padL=190*dpr,padT=20*dpr,padR=10*dpr,rh=(h-padT-6*dpr)/rows.length;const X=d=>padL+(d/END)*(w-padL-padR);
+ ganttGeo={padL,padR,w,dpr};x.font=(11*dpr)+'px system-ui,Arial';x.textBaseline='middle';
+ const nm=Math.ceil(END/MD);for(let i=0;i<=nm;i++){const px=X(Math.min(i*MD,END));x.strokeStyle=cssv('--line');x.lineWidth=1;x.beginPath();x.moveTo(px,padT);x.lineTo(px,h-4*dpr);x.stroke();if(i<nm&&i%2===0){x.fillStyle=cssv('--muted');x.fillText(mLab(SM+i),px+2*dpr,padT/2);}}
+ rows.forEach((r,i)=>{const y=padT+i*rh;if(i%2===0){x.fillStyle='rgba(120,140,160,.10)';x.fillRect(0,y,w,rh);}x.fillStyle=cssv('--ink');x.fillText(r.code+' '+r.name.slice(0,26),6*dpr,y+rh/2);
+  const x0=X(r.s-1),x1=X(r.f),isB=r.code.startsWith('1.2');x.fillStyle=cssv('--muted');x.globalAlpha=.35;x.fillStyle=isB?'#E8A33D':'#2F8A99';x.fillRect(x0,y+rh*.22,Math.max(x1-x0,2),rh*.56);x.globalAlpha=1;
+  const dn=clamp((T-(r.s-1))/(r.f-(r.s-1)),0,1);x.fillStyle=isB?'#E8A33D':'#2F8A99';x.fillRect(x0,y+rh*.22,Math.max((x1-x0)*dn,0),rh*.56);});
+ const px=X(T);x.strokeStyle='#E0412F';x.lineWidth=2*dpr;x.beginPath();x.moveTo(px,padT-4*dpr);x.lineTo(px,h-2*dpr);x.stroke();}
+function drawHist(){const c=$('hist'),{w,h,dpr}=sizeCv(c),x=c.getContext('2d');x.clearRect(0,0,w,h);const ms=D.months.slice(0,Math.ceil(END/MD));const mx=Math.max(...ms.map(m=>m.men))*1.1,padL=34*dpr,padB=18*dpr,padT=8*dpr;const bw=(w-padL-8*dpr)/ms.length;const cur=Math.floor((Math.max(T,1)-1)/MD);
+ x.font=(10.5*dpr)+'px system-ui,Arial';x.fillStyle=cssv('--muted');x.textBaseline='middle';
+ for(let g=0;g<=3;g++){const v=mx*g/3,y=padT+(h-padT-padB)*(1-g/3);x.strokeStyle=cssv('--line');x.beginPath();x.moveTo(padL,y);x.lineTo(w,y);x.stroke();x.fillStyle=cssv('--muted');x.fillText(String(Math.round(v)),2*dpr,y);}
+ ms.forEach((m,i)=>{const bh=(h-padT-padB)*m.men/mx,bx=padL+i*bw+bw*.12,by=h-padB-bh;x.fillStyle=i===cur?'#E8A33D':cssv('--bar');x.globalAlpha=i<=cur?1:.38;x.fillRect(bx,by,bw*.76,bh);x.globalAlpha=1;if(i%2===0){x.fillStyle=cssv('--muted');x.textAlign='center';x.fillText(String(SM+i),bx+bw*.38,h-padB/2);x.textAlign='left';}});
+ // cumulative man-days line
+ x.strokeStyle='#E0412F';x.lineWidth=1.5*dpr;x.beginPath();ms.forEach((m,i)=>{const p=mdTo(Math.min((i+1)*MD,END))/TOT_MD,px=padL+i*bw+bw*.5,py=padT+(h-padT-padB)*(1-p);i?x.lineTo(px,py):x.moveTo(px,py);});x.stroke();
+ x.fillStyle=cssv('--muted');x.fillText('red line = cumulative labour %',padL+6*dpr,padT+8*dpr);}
+function ganttSet(e){const c=$('gantt'),r=c.getBoundingClientRect();if(!ganttGeo)return;const px=(e.clientX-r.left)*ganttGeo.dpr;const t=((px-ganttGeo.padL)/(ganttGeo.w-ganttGeo.padL-ganttGeo.padR))*END;setTime(clamp(t,0,END));}
+let gdrag=false;$('gantt').addEventListener('pointerdown',e=>{gdrag=true;$('gantt').setPointerCapture(e.pointerId);playing=false;$('play').textContent='▶ Play';ganttSet(e);});
+$('gantt').addEventListener('pointermove',e=>{if(gdrag)ganttSet(e);});$('gantt').addEventListener('pointerup',()=>gdrag=false);
+
+/* controls */
+$('play').onclick=()=>{playing=!playing;if(playing&&T>=END-0.5)setTime(0);$('play').textContent=playing?'❚❚ Pause':'▶ Play';lastTs=0;};
+dayEl.addEventListener('input',()=>{playing=false;$('play').textContent='▶ Play';setTime(+dayEl.value);});
+msel.addEventListener('change',()=>{playing=false;$('play').textContent='▶ Play';setTime(Math.min(END,Math.round((+msel.value+1)*MD)));});
+$('prev').onclick=()=>{playing=false;$('play').textContent='▶ Play';setTime(Math.round(T)-1);};$('next').onclick=()=>{playing=false;$('play').textContent='▶ Play';setTime(Math.round(T)+1);};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;if(e.code==='Space'){e.preventDefault();$('play').click();}if(e.code==='ArrowRight')setTime(Math.round(T)+1);if(e.code==='ArrowLeft')setTime(Math.round(T)-1);});
+$('theme').onclick=()=>{const r=document.documentElement;const dark=r.getAttribute('data-theme')?r.getAttribute('data-theme')==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.setAttribute('data-theme',dark?'light':'dark');setTimeout(()=>{sceneBg();drawGantt();drawHist();},30);};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>setTimeout(()=>{sceneBg();drawGantt();drawHist();},30));
+(function(){const L=[['#2F8A99','D-wall (complete)'],['#E8A33D','In progress today / active'],['#D9822B','Rebar fixing (ghost)'],['#4C8FD0','Formwork / falsework (ghost)'],['#B7BCC2','Concrete (complete)'],['#D9CDB5','Plastered'],['#F1EDE3','Painted'],['#C0674A','Roof mosaic tiles'],['#2F6FB0','Pumps / equipment'],['#BDB6A8','CMU block courses (laying)'],['#CFC8B8','Plaster (rough cement)'],['#F3F1EA','Paint: primer (white)'],['#E9DFC6','Paint: 2nd coat (cream)'],['#D9C79A','Paint: final coat (sand + darker plinth)'],['#BFD6CA','Interior paint (green-grey)']];$('legend').innerHTML=L.map(l=>'<span class="sw" style="background:'+l[0]+'"></span><span>'+l[1]+'</span>').join('');})();
+
+/* resize + loop */
+function resize(){const r=view.getBoundingClientRect();const w=Math.max(10,r.width),h=Math.max(10,r.height);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();dirty=true;drawGantt();drawHist();}
+new ResizeObserver(resize).observe(view);new ResizeObserver(()=>{drawGantt();drawHist();}).observe($('bottom'));
+function loop(ts){requestAnimationFrame(loop);if(ANIM){CLK.v=ts/1000;if(animMach(CLK.v,T))dirty=true;ANIMS.forEach(a=>{if(a.on(T)){a.upd(CLK.v,T);dirty=true;}});}if(playing){if(!lastTs)lastTs=ts;const dt=Math.min((ts-lastTs)/1000,0.1);lastTs=ts;const nt=T+dt*(+$('speed').value);if(nt>=END){setTime(END);playing=false;$('play').textContent='▶ Play';}else setTime(nt);}
+ if(dirty){dirty=false;const cp=camera.position;LABELS.forEach(sp=>{const d=cp.distanceTo(sp.position),k=clamp(d/125,0.18,3);sp.scale.set(sp.userData.base[0]*k,sp.userData.base[1]*k,1);});renderer.render(scene,camera);}}
+sceneBg();cam();applyLayers();updPlanes();resize();setTime(END);requestAnimationFrame(loop);
+window.__ph={setTime,orb,cam,ELS,MACH,LAYER,applyLayers};
+})();
+</script>
+</body>
+</html>
